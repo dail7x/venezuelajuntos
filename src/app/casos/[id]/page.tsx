@@ -1,7 +1,45 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Header } from "@/components/Header";
 import { kindLabels, statusLabels } from "@/lib/data";
 import { getCaseById } from "@/lib/cases-db";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const item = await getCaseById(id);
+  
+  if (!item) {
+    return {
+      title: "Caso no encontrado | Venezuela Juntos",
+    };
+  }
+
+  const title = `Buscamos a ${item.title} - ${kindLabels[item.kind] || 'Reporte'}`;
+  const description = `Por favor ayúdame a difundir. Visto por última vez en ${item.publicAddress || item.zone}. Estado: ${statusLabels[item.status] || 'Desconocido'}.`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: [
+        {
+          url: `/api/og?id=${id}&type=og`,
+          width: 1200,
+          height: 630,
+          alt: `Imagen de búsqueda de ${item.title}`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [`/api/og?id=${id}&type=og`],
+    },
+  };
+}
 
 export default async function CasePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

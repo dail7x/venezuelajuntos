@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const emergencyNumbers = [
   { label: "VEN 9-1-1", value: "911" },
   { label: "Proteccion Civil Nacional", value: "0800-7248451" },
@@ -24,6 +26,11 @@ export function Footer() {
             <strong>{item.value}</strong>
           </div>
         ))}
+      </div>
+      <div style={{ textAlign: "center", marginTop: "2rem", padding: "1rem 0", borderTop: "1px solid var(--line)" }}>
+        <Link href="/sugerencias" style={{ color: "var(--blue)", fontWeight: 600, textDecoration: "none" }}>
+          ¿Eres de una ONG o tienes una sugerencia? Contáctanos
+        </Link>
       </div>
     </footer>
   );

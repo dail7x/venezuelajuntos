@@ -106,7 +106,11 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
       .catch(() => {});
   }, [selectedPerson, page, debouncedNameQuery, debouncedZoneQuery, statusFilter]);
 
-  const displayCases = cases.filter((item) => viewTab === "personas" ? (item.kind === "missing" || item.kind === "found") : item.kind === "help");
+  const displayCases = cases.filter((item) => 
+    viewTab === "personas" ? (item.kind === "missing" || item.kind === "found") : 
+    viewTab === "mascotas" ? (item.kind === "pet_lost" || item.kind === "pet_found") : 
+    item.kind === "help"
+  );
   const hasSearch = Boolean(nameQuery.trim() || zoneQuery.trim() || statusFilter);
   const totalPages = Math.ceil(totalItems / pageSize) || 1;
 
@@ -360,8 +364,8 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
         <section className="people-section">
           <div className="section-heading" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             <div>
-              <p className="eyebrow">{viewTab === "personas" ? "Personas reportadas" : "Solicitudes urgentes"}</p>
-              <h2>{hasSearch ? "Resultados de búsqueda" : viewTab === "personas" ? "Todas las personas reportadas" : "Peticiones de ayuda ciudadana"}</h2>
+              <p className="eyebrow">{viewTab === "personas" ? "Personas reportadas" : viewTab === "mascotas" ? "Mascotas reportadas" : "Solicitudes urgentes"}</p>
+              <h2>{hasSearch ? "Resultados de búsqueda" : viewTab === "personas" ? "Todas las personas reportadas" : viewTab === "mascotas" ? "Mascotas perdidas y encontradas" : "Peticiones de ayuda ciudadana"}</h2>
             </div>
             
             <div style={{ display: "flex", gap: "0.5rem", background: "#f1f5f9", padding: "4px", borderRadius: "8px", alignSelf: "flex-start" }}>
@@ -394,6 +398,21 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
                 }}
               >
                 Peticiones de ayuda
+              </button>
+              <button
+                onClick={() => { setViewTab("mascotas"); setPage(1); }}
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: "6px",
+                  border: "none",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                  background: viewTab === "mascotas" ? "white" : "transparent",
+                  color: viewTab === "mascotas" ? "var(--ink)" : "var(--ink-soft)",
+                  boxShadow: viewTab === "mascotas" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                }}
+              >
+                Mascotas
               </button>
             </div>
           </div>
@@ -440,6 +459,48 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
               <span style={{ fontSize: "0.85rem", color: "var(--ink-muted)", fontStyle: "italic", marginLeft: "0.5rem" }}>
                 (Pronto añadiremos por zona o edificio)
               </span>
+            </div>
+          )}
+
+          {viewTab === "mascotas" && (
+            <div style={{ marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
+              <span style={{ fontSize: "0.9rem", color: "var(--ink-soft)", fontWeight: 500 }}>Filtros:</span>
+              <button
+                onClick={() => { setStatusFilter(statusFilter === "reported" ? "" : "reported"); setPage(1); }}
+                style={{
+                  padding: "4px 12px",
+                  borderRadius: "999px",
+                  border: `1px solid ${statusFilter === "reported" ? "#ea580c" : "#fed7aa"}`,
+                  background: statusFilter === "reported" ? "#ffedd5" : "white",
+                  color: statusFilter === "reported" ? "#9a3412" : "#ea580c",
+                  fontSize: "0.85rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.25rem"
+                }}
+              >
+                Mascotas perdidas
+              </button>
+              <button
+                onClick={() => { setStatusFilter(statusFilter === "located" ? "" : "located"); setPage(1); }}
+                style={{
+                  padding: "4px 12px",
+                  borderRadius: "999px",
+                  border: `1px solid ${statusFilter === "located" ? "#16a34a" : "#bbf7d0"}`,
+                  background: statusFilter === "located" ? "#dcfce7" : "white",
+                  color: statusFilter === "located" ? "#166534" : "#16a34a",
+                  fontSize: "0.85rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.25rem"
+                }}
+              >
+                Mascotas encontradas
+              </button>
             </div>
           )}
 

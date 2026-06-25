@@ -40,6 +40,22 @@ export function CaseDetailModal({
   const [duplicateCase, setDuplicateCase] = useState<any>(null);
   const [isVotingDuplicate, setIsVotingDuplicate] = useState(false);
 
+  const handleCopyLink = () => {
+    const url = `https://venezuelajuntos.online/casos/${item.id}`;
+    navigator.clipboard.writeText(url).then(() => {
+      alert("¡Enlace copiado al portapapeles!");
+    });
+  };
+
+  const handleDownloadStory = () => {
+    const link = document.createElement("a");
+    link.href = `/api/og?id=${item.id}&type=story`;
+    link.download = `story-${item.id}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const isPerson = item.kind === "missing" || item.kind === "found";
 
   const fetchNotes = async () => {
@@ -239,8 +255,8 @@ export function CaseDetailModal({
   const showStatusPill = item.kind === "missing" || item.kind === "found";
 
   return (
-    <div className="modal-backdrop" role="presentation">
-      <section aria-label={`Ficha de ${item.title}`} aria-modal="true" className="case-modal" role="dialog">
+    <div className="modal-backdrop" role="presentation" onClick={onClose}>
+      <section aria-label={`Ficha de ${item.title}`} aria-modal="true" className="case-modal" role="dialog" onClick={(e) => e.stopPropagation()}>
         <button aria-label="Cerrar ficha" className="modal-close" onClick={onClose} type="button">x</button>
         
         <div className="case-modal-media">
@@ -398,6 +414,34 @@ export function CaseDetailModal({
                 <span>{statusLabels[item.status]}</span>
               </div>
               <p>{item.description}</p>
+              
+              <div style={{ display: "flex", gap: "12px", marginTop: "16px", marginBottom: "16px", flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  style={{
+                    display: "flex", alignItems: "center", gap: "8px",
+                    padding: "8px 16px", borderRadius: "8px",
+                    border: "1px solid var(--blue)", background: "white", color: "var(--blue)",
+                    fontWeight: 600, cursor: "pointer"
+                  }}
+                >
+                  🔗 Copiar enlace
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDownloadStory}
+                  style={{
+                    display: "flex", alignItems: "center", gap: "8px",
+                    padding: "8px 16px", borderRadius: "8px",
+                    border: "none", background: "var(--blue)", color: "white",
+                    fontWeight: 600, cursor: "pointer"
+                  }}
+                >
+                  📸 Descargar Story
+                </button>
+              </div>
+
               <dl className="case-modal-facts">
                 <div><dt>Zona</dt><dd>{item.zone}</dd></div>
                 <div><dt>Ubicacion publica</dt><dd>{item.publicAddress}</dd></div>

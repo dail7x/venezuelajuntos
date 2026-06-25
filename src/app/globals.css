@@ -616,8 +616,8 @@ textarea { resize: vertical; }
 .case-modal,
 .emergency-modal {
   position: relative;
-  width: min(960px, 100%);
-  max-height: min(760px, calc(100vh - 32px));
+  width: min(840px, 100%);
+  max-height: min(700px, calc(100vh - 32px));
   overflow: auto;
   background: white;
   border-radius: 10px;
@@ -916,7 +916,9 @@ textarea { resize: vertical; }
     grid-template-columns: 1fr;
   }
   .case-modal-media {
-    min-height: 260px;
+    height: clamp(200px, 35vh, 280px);
+    max-height: 280px;
+    min-height: auto;
     border-right: 0;
     border-bottom: 1px solid var(--line);
   }
