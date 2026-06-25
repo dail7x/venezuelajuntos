@@ -98,7 +98,7 @@ Devuelve ÚNICAMENTE el JSON, sin markdown, sin explicaciones.`;
       { role: "user", content: prompt },
       { role: "user", content: "Extrae de la siguiente imagen:" },
       // The image format depends on the exact CF API, but generally it's passed as an object with `image`
-      { role: "user", content: [{ type: "image_url", image_url: { url: \`data:image/jpeg;base64,\${sourceData}\` } }] }
+      { role: "user", content: [{ type: "image_url", image_url: { url: `data:image/jpeg;base64,${sourceData}` } }] }
     ];
   } else {
     // sourceData is text/tweet
@@ -114,7 +114,7 @@ Devuelve ÚNICAMENTE el JSON, sin markdown, sin explicaciones.`;
 
   try {
     const res = await fetch(
-      \`https://api.cloudflare.com/client/v4/accounts/\${accountId}/ai/run/\${model}\`,
+      `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model}`,
       {
         method: "POST",
         headers: {
@@ -135,7 +135,7 @@ Devuelve ÚNICAMENTE el JSON, sin markdown, sin explicaciones.`;
     let cleanJson = "";
     
     if (typeof responseRaw === 'string') {
-      cleanJson = responseRaw.replace(/\`\`\`json/gi, '').replace(/\`\`\`/g, '').trim();
+      cleanJson = responseRaw.replace(/```json/gi, '').replace(/```/g, '').trim();
     } else if (typeof responseRaw === 'object' && responseRaw !== null) {
       cleanJson = JSON.stringify(responseRaw);
     }
