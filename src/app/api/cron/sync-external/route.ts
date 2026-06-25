@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   let totalImported = 0;
   
   // Limiting AI processing per cron run to avoid timeouts/rate limits
-  let aiCallsRemaining = 50; 
+  let aiCallsRemaining = 0; // Disabled during sync as per user request to separate concerns
   let aiProcessedCount = 0;
 
   try {
@@ -135,7 +135,6 @@ export async function POST(request: Request) {
 
       if (!pageHasUpdates) {
         console.log(`Page ${page} had no new updates. Stopping early.`);
-        break;
       }
 
       if (page >= json.totalPages) {
