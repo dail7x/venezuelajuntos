@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { HandHeart, Map, UserRoundX } from "lucide-react";
 
 export function Header() {
   return (
@@ -14,10 +15,19 @@ export function Header() {
           priority
         />
       </Link>
-      <nav aria-label="Principal">
-        <Link href="/mapa">Mapa</Link>
-        <Link href="/ayudar">Ayudar</Link>
-        <Link href="/admin">Admin</Link>
+      <nav aria-label="Principal" className="header-actions">
+        <Link className="header-button primary" href="/reportar/desaparecido">
+          <UserRoundX aria-hidden="true" />
+          <span>Reportar persona desaparecida</span>
+        </Link>
+        <Link className="header-button" href="/mapa">
+          <Map aria-hidden="true" />
+          <span>Mapa</span>
+        </Link>
+        <Link className="header-button" href="/ayudar">
+          <HandHeart aria-hidden="true" />
+          <span>Ayudar</span>
+        </Link>
       </nav>
     </header>
   );

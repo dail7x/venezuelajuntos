@@ -1,6 +1,7 @@
 import { nanoid } from "nanoid";
 import { getDb, hasDatabaseEnv } from "@/lib/db";
 import { normalizeSlug, seedCases, type CaseStatus, type PublicCase, type Urgency } from "@/lib/data";
+import { uploadReportImage } from "@/lib/storage";
 
 type Row = Record<string, unknown>;
 
@@ -212,6 +213,7 @@ export async function createCaseInDb(kind: string, payload: Record<string, unkno
   const id = nanoid(10);
 
   if (kind === "missing" || kind === "found") {
+    const image = await uploadReportImage(payload.photoDataUrl, "persons");
     const isFound = kind === "found";
     const fullName = text(payload.fullName || payload.knownName, isFound ? "Nombre por confirmar" : "Persona sin nombre confirmado");
     const address = text(payload.lastSeenAddress || payload.currentLocation, "Zona por confirmar");
@@ -237,7 +239,7 @@ export async function createCaseInDb(kind: string, payload: Record<string, unkno
         payload.age ? Number(payload.age) : null,
         description,
         text(payload.clothingDesc),
-        text(payload.photoDataUrl),
+        image?.url ?? "",
         address,
         payload.lastSeenAt ? Date.parse(String(payload.lastSeenAt)) : null,
         isFound ? "located" : "missing",
@@ -246,6 +248,7 @@ export async function createCaseInDb(kind: string, payload: Record<string, unkno
       ],
     });
   } else if (kind === "pet_lost" || kind === "pet_found") {
+    const image = await uploadReportImage(payload.photoDataUrl, "pets");
     await db.execute({
       sql: `INSERT INTO pet_reports (
         id, created_at, updated_at, report_kind, pet_name, pet_type, status, description, zone,
@@ -264,7 +267,7 @@ export async function createCaseInDb(kind: string, payload: Record<string, unkno
         text(payload.contactName),
         text(payload.contactPhone),
         payload.canFoster ? 1 : 0,
-        text(payload.photoDataUrl),
+        image?.url ?? "",
       ],
     });
   } else if (kind === "shelter_request" || kind === "shelter_offer") {

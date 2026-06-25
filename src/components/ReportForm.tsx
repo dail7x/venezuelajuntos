@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import type { Field } from "@/lib/forms";
+import { venezuelaZones } from "@/lib/venezuela-zones";
 
 async function compressImage(file: File) {
   const image = await new Promise<HTMLImageElement>((resolve, reject) => {
@@ -41,6 +42,7 @@ export function ReportForm({
   const [state, setState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [photoDataUrl, setPhotoDataUrl] = useState("");
   const [photoName, setPhotoName] = useState("");
+  const zoneListId = `${kind}-venezuela-zones`;
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -113,11 +115,22 @@ export function ReportForm({
             ) : field.type === "checkbox" ? (
               <input name={field.name} type="checkbox" value="true" />
             ) : (
-              <input name={field.name} type={field.type ?? "text"} required={field.required} placeholder={field.placeholder} />
+              <input
+                list={field.autocomplete === "venezuela-zones" ? zoneListId : undefined}
+                name={field.name}
+                type={field.type ?? "text"}
+                required={field.required}
+                placeholder={field.placeholder}
+              />
             )}
           </label>
         ))}
       </div>
+      <datalist id={zoneListId}>
+        {venezuelaZones.map((zone) => (
+          <option key={zone} value={zone} />
+        ))}
+      </datalist>
 
       <div className="privacy-box">
         <strong>Datos protegidos</strong>

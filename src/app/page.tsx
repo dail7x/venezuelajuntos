@@ -10,6 +10,7 @@ import { EmergencyNotice } from "@/components/Notice";
 import { Header } from "@/components/Header";
 import { MapPanel } from "@/components/MapPanel";
 import { getStats, seedCases, type PublicCase } from "@/lib/data";
+import { venezuelaZones } from "@/lib/venezuela-zones";
 
 function normalize(value: string) {
   return value
@@ -146,6 +147,7 @@ export default function Home() {
           <label>
             Buscar por zona
             <input
+              list="home-venezuela-zones"
               value={zoneQuery}
               onChange={(event) => setZoneQuery(event.target.value)}
               placeholder="Municipio, barrio o referencia"
@@ -157,6 +159,11 @@ export default function Home() {
             <Link href="/mapa">Ver mapa filtrable</Link>
           </div>
         </section>
+        <datalist id="home-venezuela-zones">
+          {venezuelaZones.map((zone) => (
+            <option key={zone} value={zone} />
+          ))}
+        </datalist>
 
         <section className="home-map-section">
           <MapPanel cases={filteredCases} compact />

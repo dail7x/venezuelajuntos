@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createCaseInDb, getPublicCasesFromDb } from "@/lib/cases-db";
+import { hasDatabaseEnv } from "@/lib/db";
 import { normalizeSlug, seedCases } from "@/lib/data";
 
 export async function GET() {
@@ -23,6 +24,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ ...result, duplicateCandidates: [] }, { status: 201 });
   } catch (error) {
     console.error("cases_post_failed", error);
+    if (hasDatabaseEnv()) {
+      return NextResponse.json({ error: "case_save_failed" }, { status: 500 });
+    }
   }
 
   const title =
