@@ -7,9 +7,9 @@ export function Header() {
     <header className="site-header">
       <Link className="brand" href="/">
         <Image
-          src="/logo-horizontal.svg"
+          src="/logo.png"
           alt="Venezuela Juntos Logo"
-          width={182}
+          width={171}
           height={38}
           className="brand-logo"
           priority

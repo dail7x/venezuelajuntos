@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { kindLabels, statusLabels, urgencyLabels, type PublicCase } from "@/lib/data";
+import { kindLabels, statusLabels, type PublicCase } from "@/lib/data";
 
 export function CaseCard({ item, onOpen }: { item: PublicCase; onOpen?: (item: PublicCase) => void }) {
   const content = (
@@ -12,7 +12,6 @@ export function CaseCard({ item, onOpen }: { item: PublicCase; onOpen?: (item: P
       ) : null}
       <div className="case-card-top">
         <span className="pill">{kindLabels[item.kind]}</span>
-        <span className={`urgency ${item.urgency}`}>{urgencyLabels[item.urgency]}</span>
       </div>
       <h3>{item.title}</h3>
       <p>{item.zone}</p>
@@ -20,12 +19,24 @@ export function CaseCard({ item, onOpen }: { item: PublicCase; onOpen?: (item: P
         <span>{statusLabels[item.status]}</span>
         <span>Actualizado {new Date(item.updatedAt).toLocaleString("es-VE", { dateStyle: "short", timeStyle: "short" })}</span>
       </div>
+      {item.sourceDomain && (
+        <div style={{ marginTop: "1rem", fontSize: "0.85rem", color: "#5b6b7b", borderTop: "1px solid #e6ecf2", paddingTop: "0.5rem" }}>
+          <span aria-hidden="true">🌐 </span>
+          {item.sourceUrl ? (
+            <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#2563a8", textDecoration: "underline" }} onClick={(e) => e.stopPropagation()}>
+              Fuente: {item.sourceDomain} · sin verificar
+            </a>
+          ) : (
+            <span>Fuente: {item.sourceDomain} · sin verificar</span>
+          )}
+        </div>
+      )}
     </>
   );
 
   if (onOpen) {
     return (
-      <article className={`case-card ${item.urgency}`} style={{ cursor: 'pointer' }} onClick={() => onOpen(item)}>
+      <article className="case-card" style={{ cursor: 'pointer' }} onClick={() => onOpen(item)}>
         {content}
       </article>
     );
@@ -33,7 +44,7 @@ export function CaseCard({ item, onOpen }: { item: PublicCase; onOpen?: (item: P
 
   return (
     <Link href={`/casos/${item.slug}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-      <article className={`case-card ${item.urgency}`}>
+      <article className="case-card">
         {content}
       </article>
     </Link>

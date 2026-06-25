@@ -105,7 +105,6 @@ export const helpFields: Field[] = [
     { label: "Refugio", value: "shelter" },
     { label: "Otra ayuda", value: "other" },
   ] },
-  { name: "urgency", label: "Urgencia", type: "select", required: true, options: [{ label: "Critica", value: "critical" }, { label: "Alta", value: "high" }, { label: "Media", value: "medium" }, { label: "Baja", value: "low" }] },
   { name: "numberOfPeople", label: "Cantidad estimada de personas afectadas", type: "number", placeholder: "1" },
   { name: "description", label: "Descripcion corta", type: "textarea", required: true, placeholder: "Que ocurre y que se necesita exactamente" },
   { name: "address", label: "Direccion o referencia", required: true, placeholder: "Zona, barrio, edificio, referencia", autocomplete: "venezuela-zones" },

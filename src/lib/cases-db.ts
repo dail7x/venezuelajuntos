@@ -1,6 +1,6 @@
 import { nanoid } from "nanoid";
 import { getDb, hasDatabaseEnv } from "@/lib/db";
-import { normalizeSlug, seedCases, type CaseStatus, type PublicCase, type Urgency } from "@/lib/data";
+import { normalizeSlug, seedCases, getStats, type CaseStatus, type PublicCase } from "@/lib/data";
 import { uploadReportImage } from "@/lib/storage";
 
 type Row = Record<string, unknown>;
@@ -72,7 +72,6 @@ function mapPerson(row: Row): PublicCase {
     title: name,
     personName: name,
     age: typeof row.age_estimated === "number" ? row.age_estimated : undefined,
-    urgency: status === "missing" ? "high" : "medium",
     status,
     zone,
     publicAddress: zone,
@@ -99,7 +98,6 @@ function mapRequest(row: Row): PublicCase {
     slug: normalizeSlug(`${title}-${zone}`),
     kind: "help",
     title,
-    urgency: text(row.urgency, "high") as Urgency,
     status: requestStatus(text(row.status, "open")),
     zone,
     publicAddress: zone,
@@ -125,7 +123,6 @@ function mapZone(row: Row): PublicCase {
     slug: normalizeSlug(`${title}-${zone}`),
     kind: "zone",
     title,
-    urgency: text(row.urgency, "high") as Urgency,
     status: zoneStatus(text(row.status, "reported")),
     zone,
     publicAddress: zone,
@@ -153,7 +150,6 @@ function mapPet(row: Row): PublicCase {
     slug: normalizeSlug(`${reportKind}-${name}-${zone}`),
     kind: reportKind === "pet_found" ? "pet_found" : "pet_lost",
     title: reportKind === "pet_found" ? `${name} recuperada` : `${name} perdida`,
-    urgency: reportKind === "pet_found" ? "medium" : "high",
     status: reportKind === "pet_found" ? "located" : "reported",
     zone,
     publicAddress: zone,
@@ -181,7 +177,6 @@ function mapShelter(row: Row): PublicCase {
     slug: normalizeSlug(`${reportKind}-${title}-${zone}`),
     kind: reportKind === "shelter_offer" ? "shelter_offer" : "shelter_request",
     title,
-    urgency: reportKind === "shelter_request" ? "high" : "medium",
     status: "reported",
     zone,
     publicAddress: zone,
@@ -191,6 +186,7 @@ function mapShelter(row: Row): PublicCase {
     updatedAt: dateIso(row.updated_at),
     lastConfirmedAt: dateIso(row.updated_at),
     description: text(row.description, "Reporte de refugio pendiente de verificacion."),
+    photoUrl: resolvePhotoUrl(text(row.photo_url)),
     reporterPublic: "Contacto protegido",
     signals: signals(),
     sensitiveHidden: true,
@@ -198,25 +194,185 @@ function mapShelter(row: Row): PublicCase {
   };
 }
 
-export async function getPublicCasesFromDb() {
-  if (!hasDatabaseEnv()) return seedCases;
+export async function getPublicCasesFromDb(page = 1, limit = 100, query = "", zoneQ = "", status = "") {
+  if (!hasDatabaseEnv()) return { items: seedCases, total: seedCases.length };
 
   const db = getDb();
-  const [persons, requests, zones, pets, shelters] = await Promise.all([
-    db.execute("SELECT * FROM persons WHERE is_deleted = 0 ORDER BY updated_at DESC LIMIT 200"),
-    db.execute("SELECT * FROM help_requests WHERE is_deleted = 0 ORDER BY updated_at DESC LIMIT 200"),
-    db.execute("SELECT * FROM rescue_zones WHERE is_deleted = 0 ORDER BY updated_at DESC LIMIT 200"),
-    db.execute("SELECT * FROM pet_reports WHERE is_deleted = 0 ORDER BY updated_at DESC LIMIT 200"),
-    db.execute("SELECT * FROM shelter_reports WHERE is_deleted = 0 ORDER BY updated_at DESC LIMIT 200"),
+  const offset = (page - 1) * limit;
+
+  const sqlBase = `
+    SELECT * FROM (
+      SELECT id, 'person' as type, updated_at,
+             full_name as title_or_name,
+             COALESCE(last_seen_address, found_address) as zone_or_address,
+             COALESCE(physical_desc, found_notes, clothing_desc) as search_desc,
+             status
+      FROM persons WHERE is_deleted = 0
+      UNION ALL
+      SELECT id, 'request' as type, updated_at,
+             COALESCE(title, request_type) as title_or_name,
+             address as zone_or_address,
+             description as search_desc,
+             status
+      FROM help_requests WHERE is_deleted = 0
+      UNION ALL
+      SELECT id, 'zone' as type, updated_at,
+             title as title_or_name,
+             address as zone_or_address,
+             description as search_desc,
+             status
+      FROM rescue_zones WHERE is_deleted = 0
+      UNION ALL
+      SELECT id, 'pet' as type, updated_at,
+             pet_name as title_or_name,
+             zone as zone_or_address,
+             description as search_desc,
+             status
+      FROM pet_reports WHERE is_deleted = 0
+      UNION ALL
+      SELECT id, 'shelter' as type, updated_at,
+             title as title_or_name,
+             zone as zone_or_address,
+             description as search_desc,
+             status
+      FROM shelter_reports WHERE is_deleted = 0
+    ) unified
+    WHERE 1=1
+  `;
+
+  let conditions = "";
+  const args: any[] = [];
+
+  if (query) {
+    conditions += ` AND (title_or_name LIKE ? OR search_desc LIKE ?)`;
+    args.push(`%${query}%`, `%${query}%`);
+  }
+  
+  if (zoneQ) {
+    conditions += ` AND zone_or_address LIKE ?`;
+    args.push(`%${zoneQ}%`);
+  }
+  
+  if (status === "missing") {
+    conditions += ` AND status = 'missing'`;
+  } else if (status === "resolved") {
+    conditions += ` AND status IN ('located', 'reunified', 'resolved', 'closed')`;
+  }
+
+  const countSql = `SELECT count(*) as total FROM (${sqlBase} ${conditions}) c`;
+  const resultSql = `${sqlBase} ${conditions} ORDER BY updated_at DESC LIMIT ? OFFSET ?`;
+  
+  const countArgs = [...args];
+  const resultArgs = [...args, limit, offset];
+
+  const [countRes, unifiedRes] = await Promise.all([
+    db.execute({ sql: countSql, args: countArgs }),
+    db.execute({ sql: resultSql, args: resultArgs })
   ]);
 
-  return [
+  const total = Number(countRes.rows[0]?.total || 0);
+  
+  const personIds = unifiedRes.rows.filter(r => r.type === 'person').map(r => r.id);
+  const requestIds = unifiedRes.rows.filter(r => r.type === 'request').map(r => r.id);
+  const zoneIds = unifiedRes.rows.filter(r => r.type === 'zone').map(r => r.id);
+  const petIds = unifiedRes.rows.filter(r => r.type === 'pet').map(r => r.id);
+  const shelterIds = unifiedRes.rows.filter(r => r.type === 'shelter').map(r => r.id);
+
+  const [persons, requests, zones, pets, shelters] = await Promise.all([
+    personIds.length > 0 ? db.execute({ sql: `SELECT * FROM persons WHERE id IN (${personIds.map(()=>'?').join(',')})`, args: personIds }) : { rows: [] },
+    requestIds.length > 0 ? db.execute({ sql: `SELECT * FROM help_requests WHERE id IN (${requestIds.map(()=>'?').join(',')})`, args: requestIds }) : { rows: [] },
+    zoneIds.length > 0 ? db.execute({ sql: `SELECT * FROM rescue_zones WHERE id IN (${zoneIds.map(()=>'?').join(',')})`, args: zoneIds }) : { rows: [] },
+    petIds.length > 0 ? db.execute({ sql: `SELECT * FROM pet_reports WHERE id IN (${petIds.map(()=>'?').join(',')})`, args: petIds }) : { rows: [] },
+    shelterIds.length > 0 ? db.execute({ sql: `SELECT * FROM shelter_reports WHERE id IN (${shelterIds.map(()=>'?').join(',')})`, args: shelterIds }) : { rows: [] },
+  ]);
+
+  const publicCases = [
     ...persons.rows.map((row) => mapPerson(row as Row)),
     ...requests.rows.map((row) => mapRequest(row as Row)),
     ...zones.rows.map((row) => mapZone(row as Row)),
     ...pets.rows.map((row) => mapPet(row as Row)),
     ...shelters.rows.map((row) => mapShelter(row as Row)),
-  ].sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
+  ];
+  
+  const casesMap = new Map(publicCases.map(c => [c.id, c]));
+  const sortedCases = unifiedRes.rows.map(r => casesMap.get(r.id as string)).filter(Boolean) as PublicCase[];
+
+  return { items: sortedCases, total };
+}
+
+export async function getGlobalStatsFromDb() {
+  if (!hasDatabaseEnv()) return getStats(seedCases);
+  const db = getDb();
+  
+  const sql = `
+    SELECT 
+      (
+        SELECT count(*) FROM persons WHERE is_deleted=0 AND status NOT IN ('located', 'reunified', 'duplicate', 'false_alarm')
+      ) + (
+        SELECT count(*) FROM help_requests WHERE is_deleted=0 AND status NOT IN ('resolved', 'closed', 'duplicate', 'false_alarm')
+      ) + (
+        SELECT count(*) FROM rescue_zones WHERE is_deleted=0 AND status NOT IN ('resolved', 'closed', 'duplicate', 'false_alarm')
+      ) + (
+        SELECT count(*) FROM pet_reports WHERE is_deleted=0 AND status NOT IN ('located', 'reunified', 'duplicate', 'false_alarm')
+      ) + (
+        SELECT count(*) FROM shelter_reports WHERE is_deleted=0 AND status NOT IN ('resolved', 'closed', 'duplicate', 'false_alarm')
+      ) AS open,
+      
+      (
+        SELECT count(*) FROM persons WHERE is_deleted=0 AND status = 'missing'
+      ) AS missing,
+      
+      (
+        SELECT count(*) FROM persons WHERE is_deleted=0 AND status IN ('located', 'reunified')
+      ) + (
+        SELECT count(*) FROM help_requests WHERE is_deleted=0 AND status IN ('resolved', 'closed')
+      ) + (
+        SELECT count(*) FROM rescue_zones WHERE is_deleted=0 AND status IN ('resolved', 'closed')
+      ) + (
+        SELECT count(*) FROM pet_reports WHERE is_deleted=0 AND status IN ('located', 'reunified')
+      ) + (
+        SELECT count(*) FROM shelter_reports WHERE is_deleted=0 AND status IN ('resolved', 'closed')
+      ) AS resolved
+  `;
+  
+  const res = await db.execute(sql);
+  const row = res.rows[0];
+  return {
+    open: Number(row.open),
+    missing: Number(row.missing),
+    resolved: Number(row.resolved)
+  };
+}
+
+export async function getCaseById(id: string): Promise<PublicCase | null> {
+  if (!hasDatabaseEnv()) {
+    return seedCases.find((c) => c.id === id || c.slug === id) || null;
+  }
+
+  const db = getDb();
+  
+  // A quick check across tables
+  const queries = [
+    { type: 'person', sql: 'SELECT * FROM persons WHERE id = ? OR pfif_person_id = ?' },
+    { type: 'request', sql: 'SELECT * FROM help_requests WHERE id = ?' },
+    { type: 'zone', sql: 'SELECT * FROM rescue_zones WHERE id = ?' },
+    { type: 'pet', sql: 'SELECT * FROM pet_reports WHERE id = ?' },
+    { type: 'shelter', sql: 'SELECT * FROM shelter_reports WHERE id = ?' }
+  ];
+
+  for (const q of queries) {
+    const args = q.type === 'person' ? [id, id] : [id];
+    const res = await db.execute({ sql: q.sql, args });
+    if (res.rows.length > 0) {
+      if (q.type === 'person') return mapPerson(res.rows[0] as Row);
+      if (q.type === 'request') return mapRequest(res.rows[0] as Row);
+      if (q.type === 'zone') return mapZone(res.rows[0] as Row);
+      if (q.type === 'pet') return mapPet(res.rows[0] as Row);
+      if (q.type === 'shelter') return mapShelter(res.rows[0] as Row);
+    }
+  }
+
+  return null;
 }
 
 export async function createCaseInDb(kind: string, payload: Record<string, unknown>) {
@@ -322,15 +478,14 @@ export async function createCaseInDb(kind: string, payload: Record<string, unkno
 
     await db.execute({
       sql: `INSERT INTO help_requests (
-        id, created_at, updated_at, source, request_type, urgency, title, description, address,
+        id, created_at, updated_at, source, request_type, title, description, address,
         requester_name, requester_contact, number_of_people, has_children, has_elderly, has_disabled, status
-      ) VALUES (?, ?, ?, 'web_form', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'open')`,
+      ) VALUES (?, ?, ?, 'web_form', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'open')`,
       args: [
         id,
         now,
         now,
         requestType,
-        text(payload.urgency, "high"),
         title,
         description,
         address,

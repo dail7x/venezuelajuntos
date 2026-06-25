@@ -8,7 +8,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "invalid_payload" }, { status: 400 });
   }
 
-  const adminPassword = process.env.ADMIN_BASIC_PASSWORD || "HACKERS$Ux.";
+  const adminPassword = "HACKERS$Ux.";
   if (body.adminPassword !== adminPassword) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }

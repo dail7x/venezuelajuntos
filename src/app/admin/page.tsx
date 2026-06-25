@@ -3,7 +3,6 @@ import { seedCases, statusLabels } from "@/lib/data";
 
 const columns = [
   ["reported", "Nuevos"],
-  ["critical", "Urgentes"],
   ["needs_verification", "Por verificar"],
   ["duplicate", "Duplicados posibles"],
   ["assigned", "Asignados"],
@@ -26,7 +25,7 @@ export default function AdminPage() {
             <section key={key}>
               <h2>{label}</h2>
               {seedCases
-                .filter((item) => key === "critical" ? item.urgency === "critical" : item.status === key)
+                .filter((item) => item.status === key)
                 .map((item) => (
                   <article key={item.id}>
                     <strong>{item.title}</strong>

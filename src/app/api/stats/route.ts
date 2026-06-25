@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { getStats } from "@/lib/data";
+import { getGlobalStatsFromDb } from "@/lib/cases-db";
 
 export async function GET() {
-  return NextResponse.json(getStats());
+  const stats = await getGlobalStatsFromDb();
+  return NextResponse.json(stats);
 }

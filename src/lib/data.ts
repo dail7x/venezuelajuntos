@@ -1,5 +1,5 @@
 export type CaseKind = "missing" | "found" | "help" | "zone" | "pet_lost" | "pet_found" | "shelter_request" | "shelter_offer";
-export type Urgency = "critical" | "high" | "medium" | "low";
+
 export type CaseStatus =
   | "reported"
   | "needs_verification"
@@ -22,7 +22,7 @@ export type PublicCase = {
   title: string;
   personName?: string;
   age?: number;
-  urgency: Urgency;
+
   status: CaseStatus;
   zone: string;
   publicAddress: string;
@@ -43,6 +43,8 @@ export type PublicCase = {
   };
   sensitiveHidden: boolean;
   needs: string[];
+  sourceDomain?: string;
+  sourceUrl?: string;
 };
 
 export const statusLabels: Record<CaseStatus, string> = {
@@ -61,12 +63,7 @@ export const statusLabels: Record<CaseStatus, string> = {
   reunified: "Reunificado",
 };
 
-export const urgencyLabels: Record<Urgency, string> = {
-  critical: "Critica",
-  high: "Alta",
-  medium: "Media",
-  low: "Baja",
-};
+
 
 export const kindLabels: Record<CaseKind, string> = {
   missing: "Persona desaparecida",
@@ -90,7 +87,6 @@ export function getStats(cases = seedCases) {
     open: cases.filter((item) => !["resolved", "closed", "reunified", "duplicate"].includes(item.status)).length,
     resolved: cases.filter((item) => ["resolved", "closed", "reunified", "located"].includes(item.status)).length,
     missing: cases.filter((item) => item.kind === "missing" && item.status === "missing").length,
-    urgent: cases.filter((item) => item.urgency === "critical" || item.urgency === "high").length,
   };
 }
 
@@ -103,7 +99,6 @@ export function publicGeoJson(cases = seedCases) {
         id: item.id,
         kind: item.kind,
         title: item.title,
-        urgency: item.urgency,
         status: item.status,
         zone: item.zone,
         url: `/casos/${item.slug}`,

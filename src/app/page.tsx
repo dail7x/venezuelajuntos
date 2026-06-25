@@ -1,15 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, useCallback } from "react";
-import { HandHeart, Home as HomeIcon, PawPrint, Siren, UserRoundCheck, UserRoundX } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import { useDebounce } from "use-debounce";
+import { HandHeart, Home as HomeIcon, PawPrint, Siren, UserRoundCheck, UserRoundX, CheckCircle2 } from "lucide-react";
 import { CaseCard } from "@/components/CaseCard";
 import { CaseDetailModal } from "@/components/CaseDetailModal";
 import { EmergencyHelpModal } from "@/components/EmergencyHelpModal";
 import { EmergencyNotice } from "@/components/Notice";
 import { Header } from "@/components/Header";
 import { MapPanel } from "@/components/MapPanel";
-import { getStats, seedCases, type PublicCase } from "@/lib/data";
+import { seedCases, type PublicCase } from "@/lib/data";
 import { venezuelaZones } from "@/lib/venezuela-zones";
 
 import { ReportForm } from "@/components/ReportForm";
@@ -23,40 +24,50 @@ import {
   helpFields,
 } from "@/lib/forms";
 
-function normalize(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
-}
 
-function caseMatches(item: PublicCase, nameQuery: string, zoneQuery: string) {
-  const nameNeedle = normalize(nameQuery);
-  const zoneNeedle = normalize(zoneQuery);
-  const nameHaystack = normalize(`${item.title} ${item.personName ?? ""} ${item.description}`);
-  const zoneHaystack = normalize(`${item.zone} ${item.publicAddress}`);
-
-  return (!nameNeedle || nameHaystack.includes(nameNeedle)) && (!zoneNeedle || zoneHaystack.includes(zoneNeedle));
-}
 
 export default function Home({ defaultModal = null }: { defaultModal?: string | null }) {
   const [cases, setCases] = useState<PublicCase[]>(seedCases);
   const [nameQuery, setNameQuery] = useState("");
   const [zoneQuery, setZoneQuery] = useState("");
+  const [debouncedNameQuery] = useDebounce(nameQuery, 500);
+  const [debouncedZoneQuery] = useDebounce(zoneQuery, 500);
+  
+  const [page, setPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const pageSize = 100;
+  
   const [dataSource, setDataSource] = useState<"seed" | "db" | "loading">("loading");
   const [selectedPerson, setSelectedPerson] = useState<PublicCase | null>(null);
   const [showEmergencyHelp, setShowEmergencyHelp] = useState(false);
   const [activeModal] = useState<string | null>(defaultModal);
+  const [globalStats, setGlobalStats] = useState({ open: 0, missing: 0, resolved: 0 });
+  const [statusFilter, setStatusFilter] = useState("");
+
+  useEffect(() => {
+    fetch("/api/stats")
+      .then((res) => res.json())
+      .then((data) => setGlobalStats(data))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
+    const url = new URL("/api/cases", window.location.href);
+    url.searchParams.set("page", page.toString());
+    url.searchParams.set("limit", pageSize.toString());
+    if (debouncedNameQuery) url.searchParams.set("query", debouncedNameQuery);
+    if (debouncedZoneQuery) url.searchParams.set("zone", debouncedZoneQuery);
+    if (statusFilter) url.searchParams.set("status", statusFilter);
 
-    fetch("/api/cases")
+    fetch(url.toString())
       .then((response) => response.json())
-      .then((result: { data?: PublicCase[]; source?: "seed" | "db" }) => {
+      .then((result: { data?: PublicCase[]; total?: number; source?: "seed" | "db" }) => {
         if (cancelled) return;
-        if (Array.isArray(result.data)) setCases(result.data);
+        if (Array.isArray(result.data)) {
+          setCases(result.data);
+          setTotalItems(result.total ?? result.data.length);
+        }
         setDataSource(result.source ?? "seed");
       })
       .catch(() => {
@@ -66,14 +77,22 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [page, debouncedNameQuery, debouncedZoneQuery, statusFilter]);
 
   const refreshCases = useCallback(() => {
-    fetch("/api/cases")
+    const url = new URL("/api/cases", window.location.href);
+    url.searchParams.set("page", page.toString());
+    url.searchParams.set("limit", pageSize.toString());
+    if (debouncedNameQuery) url.searchParams.set("query", debouncedNameQuery);
+    if (debouncedZoneQuery) url.searchParams.set("zone", debouncedZoneQuery);
+    if (statusFilter) url.searchParams.set("status", statusFilter);
+
+    fetch(url.toString())
       .then((response) => response.json())
-      .then((result: { data?: PublicCase[]; source?: "seed" | "db" }) => {
+      .then((result: { data?: PublicCase[]; total?: number; source?: "seed" | "db" }) => {
         if (Array.isArray(result.data)) {
           setCases(result.data);
+          setTotalItems(result.total ?? result.data.length);
           setDataSource(result.source ?? "seed");
           if (selectedPerson) {
             const updated = result.data.find((c) => c.id === selectedPerson.id);
@@ -84,16 +103,11 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
         }
       })
       .catch(() => {});
-  }, [selectedPerson]);
+  }, [selectedPerson, page, debouncedNameQuery, debouncedZoneQuery, statusFilter]);
 
-  const stats = getStats(cases);
-  const filteredCases = useMemo(
-    () => cases.filter((item) => caseMatches(item, nameQuery, zoneQuery)),
-    [cases, nameQuery, zoneQuery],
-  );
-  const peopleCases = filteredCases.filter((item) => item.kind === "missing" || item.kind === "found");
-  const urgentCases = filteredCases.filter((item) => item.urgency === "critical" || item.urgency === "high");
-  const hasSearch = Boolean(nameQuery.trim() || zoneQuery.trim());
+  const peopleCases = cases.filter((item) => item.kind === "missing" || item.kind === "found");
+  const hasSearch = Boolean(nameQuery.trim() || zoneQuery.trim() || statusFilter);
+  const totalPages = Math.ceil(totalItems / pageSize) || 1;
 
   return (
     <>
@@ -227,10 +241,52 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
         ) : null}
 
         <section className="quick-stats" aria-label="Contadores">
-          <div><strong>{stats.open}</strong><span>abiertos</span></div>
-          <div><strong>{stats.missing}</strong><span>desaparecidos</span></div>
-          <div><strong>{stats.urgent}</strong><span>urgentes</span></div>
-          <div><strong>{stats.resolved}</strong><span>resueltos/localizados</span></div>
+          <button 
+            type="button"
+            onClick={() => { setStatusFilter(""); setPage(1); }} 
+            style={{ 
+              cursor: "pointer", 
+              border: statusFilter === "" ? "2px solid currentColor" : undefined,
+              background: "none",
+              padding: "1rem",
+              borderRadius: "8px",
+              textAlign: "left"
+            }}
+          >
+            <strong>{globalStats.open}</strong><span>Personas reportadas</span>
+          </button>
+          <button 
+            type="button"
+            onClick={() => { setStatusFilter("missing"); setPage(1); }} 
+            style={{ 
+              cursor: "pointer", 
+              border: statusFilter === "missing" ? "2px solid currentColor" : undefined,
+              background: "none",
+              padding: "1rem",
+              borderRadius: "8px",
+              textAlign: "left"
+            }}
+          >
+            <strong>{globalStats.missing}</strong><span>Aún buscados</span>
+          </button>
+          <button 
+            type="button"
+            onClick={() => { setStatusFilter("resolved"); setPage(1); }} 
+            style={{ 
+              cursor: "pointer", 
+              border: statusFilter === "resolved" ? "2px solid currentColor" : undefined,
+              background: "none",
+              color: "#16a34a",
+              padding: "1rem",
+              borderRadius: "8px",
+              textAlign: "left"
+            }}
+          >
+            <strong>{globalStats.resolved}</strong>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.25rem", color: "#16a34a" }}>
+              <CheckCircle2 size={16} /> Localizados a salvo
+            </span>
+          </button>
         </section>
 
         <section className="search-band">
@@ -238,7 +294,10 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
             Buscar por nombre
             <input
               value={nameQuery}
-              onChange={(event) => setNameQuery(event.target.value)}
+              onChange={(event) => {
+                setNameQuery(event.target.value);
+                setPage(1);
+              }}
               placeholder="Nombre, apodo o descripcion"
               type="search"
             />
@@ -248,13 +307,16 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
             <input
               list="home-venezuela-zones"
               value={zoneQuery}
-              onChange={(event) => setZoneQuery(event.target.value)}
+              onChange={(event) => {
+                setZoneQuery(event.target.value);
+                setPage(1);
+              }}
               placeholder="Municipio, barrio o referencia"
               type="search"
             />
           </label>
           <div className="search-actions">
-            <span>{filteredCases.length} resultados</span>
+            <span>{totalItems} resultados en total</span>
             <Link href="/mapa">Ver mapa filtrable</Link>
           </div>
         </section>
@@ -274,9 +336,31 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
             <h2>{hasSearch ? "Resultados de busqueda" : "Todas las personas reportadas"}</h2>
           </div>
           {peopleCases.length ? (
-            <div className="people-grid">
-              {peopleCases.map((item) => <CaseCard key={item.id} item={item} onOpen={setSelectedPerson} />)}
-            </div>
+            <>
+              <div className="people-grid">
+                {peopleCases.map((item) => <CaseCard key={item.id} item={item} onOpen={setSelectedPerson} />)}
+              </div>
+              
+              <div className="pagination-controls" style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '2rem' }}>
+                <button 
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="cta"
+                  style={{ padding: '0.5rem 1rem', fontSize: '1rem' }}
+                >
+                  Anterior
+                </button>
+                <span style={{ display: 'flex', alignItems: 'center' }}>Página {page} de {totalPages}</span>
+                <button 
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="cta"
+                  style={{ padding: '0.5rem 1rem', fontSize: '1rem' }}
+                >
+                  Siguiente
+                </button>
+              </div>
+            </>
           ) : (
             <div className="empty-state">No hay personas que coincidan con esa busqueda.</div>
           )}

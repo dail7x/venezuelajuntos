@@ -3,13 +3,33 @@ import { createCaseInDb, getPublicCasesFromDb } from "@/lib/cases-db";
 import { hasDatabaseEnv } from "@/lib/db";
 import { normalizeSlug, seedCases } from "@/lib/data";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const limit = parseInt(searchParams.get("limit") || "100", 10);
+  const query = searchParams.get("query") || "";
+  const zone = searchParams.get("zone") || "";
+  const status = searchParams.get("status") || "";
+
   try {
-    const data = await getPublicCasesFromDb();
-    return NextResponse.json({ data, source: "db" });
+    const data = await getPublicCasesFromDb(page, limit, query, zone, status);
+    return NextResponse.json({ 
+      data: data.items, 
+      total: data.total, 
+      page, 
+      limit, 
+      source: "db" 
+    });
   } catch (error) {
     console.error("cases_get_failed", error);
-    return NextResponse.json({ data: seedCases, source: "seed", error: "db_unavailable" });
+    return NextResponse.json({ 
+      data: seedCases, 
+      total: seedCases.length,
+      page: 1,
+      limit: 100,
+      source: "seed", 
+      error: "db_unavailable" 
+    });
   }
 }
 

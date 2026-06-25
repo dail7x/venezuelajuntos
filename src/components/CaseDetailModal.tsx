@@ -1,8 +1,5 @@
-"use client";
-
 import { useEffect, useState, type FormEvent } from "react";
-import { kindLabels, statusLabels, urgencyLabels, type PublicCase } from "@/lib/data";
-import { SignalButtons } from "@/components/SignalButtons";
+import { kindLabels, statusLabels, type PublicCase } from "@/lib/data";
 
 type Note = {
   id: string;
@@ -32,6 +29,13 @@ export function CaseDetailModal({
   const [isSavingNote, setIsSavingNote] = useState(false);
   const [editError, setEditError] = useState("");
   const [noteError, setNoteError] = useState("");
+
+  const [showLocatedForm, setShowLocatedForm] = useState(false);
+  const [showRevertForm, setShowRevertForm] = useState(false);
+  const [statusFormName, setStatusFormName] = useState("");
+  const [statusFormContact, setStatusFormContact] = useState("");
+  const [statusFormText, setStatusFormText] = useState("");
+  const [isSavingStatus, setIsSavingStatus] = useState(false);
 
   const isPerson = item.kind === "missing" || item.kind === "found";
 
@@ -129,11 +133,69 @@ export function CaseDetailModal({
     }
   };
 
-  const handleSignalClick = () => {
-    setTimeout(() => {
-      if (onUpdate) onUpdate();
+  const handleStatusChangeSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSavingStatus(true);
+    setNoteError("");
+
+    try {
+      const res = await fetch("/api/cases/status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          caseId: item.id,
+          status: "located",
+          authorName: statusFormName,
+          authorContact: statusFormContact,
+          text: `Reportó que ya apareció. ${statusFormText}`,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Error al reportar");
+      setShowLocatedForm(false);
+      setStatusFormText("");
+      setStatusFormName("");
+      setStatusFormContact("");
       fetchNotes();
-    }, 400);
+      if (onUpdate) onUpdate();
+    } catch (err: any) {
+      setNoteError(err.message || "Error al conectar con el servidor.");
+    } finally {
+      setIsSavingStatus(false);
+    }
+  };
+
+  const handleRevertStatusSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!window.confirm("¿Estás seguro de que quieres volver a marcar a esta persona como desaparecida?")) return;
+    setIsSavingStatus(true);
+    setNoteError("");
+
+    try {
+      const res = await fetch("/api/cases/status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          caseId: item.id,
+          status: "missing",
+          authorName: statusFormName,
+          authorContact: statusFormContact,
+          text: `Volvió a marcar como desaparecido. Razón: ${statusFormText}`,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Error al reportar");
+      setShowRevertForm(false);
+      setStatusFormText("");
+      setStatusFormName("");
+      setStatusFormContact("");
+      fetchNotes();
+      if (onUpdate) onUpdate();
+    } catch (err: any) {
+      setNoteError(err.message || "Error al conectar con el servidor.");
+    } finally {
+      setIsSavingStatus(false);
+    }
   };
 
   const showStatusPill = item.kind === "missing" || item.kind === "found";
@@ -242,7 +304,6 @@ export function CaseDetailModal({
               <h2>{item.title}</h2>
               <div className="case-modal-badges">
                 <span>{statusLabels[item.status]}</span>
-                <span>{urgencyLabels[item.urgency]}</span>
               </div>
               <p>{item.description}</p>
               <dl className="case-modal-facts">
@@ -251,10 +312,78 @@ export function CaseDetailModal({
                 <div><dt>Ultima actualizacion</dt><dd>{new Date(item.updatedAt).toLocaleString("es-VE", { dateStyle: "medium", timeStyle: "short" })}</dd></div>
               </dl>
               
-              <div className="case-modal-actions" onClick={handleSignalClick}>
-                <h3>Actualizar este caso</h3>
-                <SignalButtons caseId={item.id} kind={item.kind} />
-              </div>
+              {isPerson && (
+                <div className="case-modal-actions">
+                  {item.status === "missing" && !showLocatedForm && (
+                    <button className="primary-button" onClick={() => setShowLocatedForm(true)}>
+                      ✅ Reportar que Ya Apareció
+                    </button>
+                  )}
+                  {showLocatedForm && (
+                    <form className="add-note-form" onSubmit={handleStatusChangeSubmit} style={{ marginTop: 0 }}>
+                      <h4>Datos de quien reporta que apareció</h4>
+                      <input
+                        type="text"
+                        placeholder="Nombre de quien reporta"
+                        required
+                        value={statusFormName}
+                        onChange={(e) => setStatusFormName(e.target.value)}
+                      />
+                      <input
+                        type="text"
+                        placeholder="Parentesco o relación"
+                        required
+                        value={statusFormContact}
+                        onChange={(e) => setStatusFormContact(e.target.value)}
+                      />
+                      <textarea
+                        placeholder="¿Dónde apareció y en qué estado se encuentra?"
+                        rows={3}
+                        required
+                        value={statusFormText}
+                        onChange={(e) => setStatusFormText(e.target.value)}
+                      />
+                      <div className="form-actions" style={{ flexDirection: 'row', gap: '8px', display: 'flex' }}>
+                        <button className="secondary-button" type="button" onClick={() => setShowLocatedForm(false)}>Cancelar</button>
+                        <button type="submit" disabled={isSavingStatus}>
+                          {isSavingStatus ? "Guardando..." : "Confirmar aparición"}
+                        </button>
+                      </div>
+                    </form>
+                  )}
+
+                  {(item.status === "located" || item.status === "reunified") && !showRevertForm && (
+                    <button className="secondary-button" onClick={() => setShowRevertForm(true)}>
+                      ⚠️ Volver a marcar como desaparecido
+                    </button>
+                  )}
+                  {showRevertForm && (
+                    <form className="add-note-form" onSubmit={handleRevertStatusSubmit} style={{ marginTop: 0 }}>
+                      <h4>Razón para volver a marcar como desaparecido</h4>
+                      <input
+                        type="text"
+                        placeholder="Tu nombre"
+                        required
+                        value={statusFormName}
+                        onChange={(e) => setStatusFormName(e.target.value)}
+                      />
+                      <textarea
+                        placeholder="Explica la razón detalladamente (ej. Fue una falsa alarma, no era la persona, etc.)"
+                        rows={3}
+                        required
+                        value={statusFormText}
+                        onChange={(e) => setStatusFormText(e.target.value)}
+                      />
+                      <div className="form-actions" style={{ flexDirection: 'row', gap: '8px', display: 'flex' }}>
+                        <button className="secondary-button" type="button" onClick={() => setShowRevertForm(false)}>Cancelar</button>
+                        <button type="submit" disabled={isSavingStatus}>
+                          {isSavingStatus ? "Guardando..." : "Volver a marcar desaparecido"}
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              )}
 
               {isPerson && (
                 <div className="case-updates-section">
