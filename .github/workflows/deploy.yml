@@ -10,10 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Setup Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v4
         with:
           node-version: 22
 
@@ -27,5 +27,11 @@ jobs:
         run: npm run build
 
       - name: Trigger Coolify deployment
-        if: ${{ secrets.COOLIFY_WEBHOOK_URL != '' }}
-        run: curl -fsS -X POST "${{ secrets.COOLIFY_WEBHOOK_URL }}"
+        env:
+          COOLIFY_WEBHOOK_URL: ${{ secrets.COOLIFY_WEBHOOK_URL }}
+        run: |
+          if [ -n "$COOLIFY_WEBHOOK_URL" ]; then
+            curl -fsS -X POST "$COOLIFY_WEBHOOK_URL"
+          else
+            echo "COOLIFY_WEBHOOK_URL is not configured; skipping webhook trigger."
+          fi
