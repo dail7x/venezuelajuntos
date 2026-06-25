@@ -11,6 +11,26 @@ type Note = {
   text: string;
 };
 
+async function compressImage(file: File) {
+  const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+
+  const maxSide = 800;
+  const ratio = Math.min(1, maxSide / Math.max(image.width, image.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(image.width * ratio));
+  canvas.height = Math.max(1, Math.round(image.height * ratio));
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("No se pudo procesar la imagen");
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+  URL.revokeObjectURL(image.src);
+  return canvas.toDataURL("image/jpeg", 0.6);
+}
+
 export function CaseDetailModal({
   item,
   onClose,
@@ -40,11 +60,28 @@ export function CaseDetailModal({
   const [duplicateCase, setDuplicateCase] = useState<any>(null);
   const [isVotingDuplicate, setIsVotingDuplicate] = useState(false);
 
-  const handleCopyLink = () => {
+  const [editPhotoName, setEditPhotoName] = useState("");
+  const [editPhotoDataUrl, setEditPhotoDataUrl] = useState("");
+
+  const handleShare = async () => {
     const url = `https://venezuelajuntos.online/casos/${item.id}`;
-    navigator.clipboard.writeText(url).then(() => {
-      alert("Enlace copiado.");
-    });
+    const text = `#VenezuelaJuntos Se busca ${item.title} en ${item.zone}. Ayúdanos a localizarlo.`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "Venezuela Juntos",
+          text: text,
+          url: url,
+        });
+      } catch (err) {
+        console.error("Error al compartir:", err);
+      }
+    } else {
+      navigator.clipboard.writeText(`${text} ${url}`).then(() => {
+        alert("Enlace y texto copiados al portapapeles para compartir.");
+      });
+    }
   };
 
   const handleDownloadStory = () => {
@@ -107,6 +144,7 @@ export function CaseDetailModal({
           lastSeenAddress: payload.lastSeenAddress,
           status: payload.status,
           adminPassword: payload.adminPassword,
+          photoDataUrl: editPhotoDataUrl,
         }),
       });
 
@@ -119,6 +157,8 @@ export function CaseDetailModal({
       }
 
       setIsEditing(false);
+      setEditPhotoDataUrl("");
+      setEditPhotoName("");
       if (onUpdate) onUpdate();
       fetchNotes();
     } catch (err: any) {
@@ -344,10 +384,24 @@ export function CaseDetailModal({
                 </label>
               </div>
 
-              <div className="form-row admin-pw-row">
+              <div className="form-row split-2">
                 <label>
                   <span>Contraseña de administrador *</span>
                   <input name="adminPassword" type="password" required placeholder="Ingresar contraseña" />
+                </label>
+                <label>
+                  <span>Actualizar foto (Opcional)</span>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setEditPhotoName(file.name);
+                      setEditPhotoDataUrl(await compressImage(file));
+                    }} 
+                  />
+                  {editPhotoName && <span style={{fontSize: "0.8rem", color: "var(--brand)"}}>Cargada: {editPhotoName}</span>}
                 </label>
               </div>
 
@@ -427,7 +481,7 @@ export function CaseDetailModal({
               <div style={{ display: "flex", gap: "12px", marginTop: "16px", marginBottom: "16px", flexWrap: "wrap" }}>
                 <button
                   type="button"
-                  onClick={handleCopyLink}
+                  onClick={handleShare}
                   style={{
                     display: "flex", alignItems: "center", gap: "8px",
                     padding: "8px 16px", borderRadius: "8px",
@@ -435,7 +489,7 @@ export function CaseDetailModal({
                     fontWeight: 600, cursor: "pointer"
                   }}
                 >
-                  Copiar enlace
+                  Compartir
                 </button>
                 <button
                   type="button"
@@ -467,16 +521,16 @@ export function CaseDetailModal({
               
               {(isPerson || item.kind === "help") && (item.status === 'missing' || item.status === 'reported') && (
                 <div className="report-action-card">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ flex: '1 1 200px' }}>
                       <h3 style={{ margin: "0 0 4px 0", color: "#166534" }}>{item.kind === "help" ? "¿Ya recibieron ayuda?" : "¿Ya fue localizada?"}</h3>
                       <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--ink-soft)" }}>
                         {item.kind === "help" ? "Si la situación ya fue atendida, avísanos para que otras personas puedan priorizar casos pendientes." : "Si tienes información confirmada de que esta persona fue localizada, avísanos para actualizar la ficha con cuidado."}
                       </p>
                     </div>
                     {!showLocatedForm && (
-                      <button className="primary-button" style={{ background: "#16a34a", color: "white", padding: "8px 16px", flexShrink: 0 }} onClick={() => setShowLocatedForm(true)}>
-                        {item.kind === "help" ? "Marcar como atendida" : "Avisar que fue localizada"}
+                      <button className="primary-button" style={{ background: "#16a34a", color: "white", padding: "8px 16px", flexShrink: 0, whiteSpace: 'nowrap' }} onClick={() => setShowLocatedForm(true)}>
+                        {item.kind === "help" ? "Marcar como atendida" : "Marcar Localizado a salvo"}
                       </button>
                     )}
                   </div>

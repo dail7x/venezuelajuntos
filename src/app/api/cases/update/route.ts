@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb, hasDatabaseEnv } from "@/lib/db";
 import { nanoid } from "nanoid";
+import { uploadReportImage } from "@/lib/storage";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -56,6 +57,17 @@ export async function POST(request: Request) {
         body.id,
       ],
     });
+
+    let newPhotoUrl = null;
+    if (body.photoDataUrl) {
+      newPhotoUrl = await uploadReportImage(body.photoDataUrl, "persons");
+      if (newPhotoUrl) {
+        await db.execute({
+          sql: "UPDATE persons SET photo_url = ? WHERE id = ?",
+          args: [newPhotoUrl.url, body.id],
+        });
+      }
+    }
 
     // Log the action in person_notes
     const noteId = nanoid(10);

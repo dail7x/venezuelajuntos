@@ -14,7 +14,7 @@ async function compressImage(file: File) {
     img.src = URL.createObjectURL(file);
   });
 
-  const maxSide = 1200;
+  const maxSide = 800;
   const ratio = Math.min(1, maxSide / Math.max(image.width, image.height));
   const canvas = document.createElement("canvas");
   canvas.width = Math.max(1, Math.round(image.width * ratio));
@@ -23,7 +23,7 @@ async function compressImage(file: File) {
   if (!context) throw new Error("No se pudo procesar la imagen");
   context.drawImage(image, 0, 0, canvas.width, canvas.height);
   URL.revokeObjectURL(image.src);
-  return canvas.toDataURL("image/jpeg", 0.78);
+  return canvas.toDataURL("image/jpeg", 0.6);
 }
 
 export function ReportForm({
