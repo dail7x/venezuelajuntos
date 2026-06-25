@@ -45,6 +45,7 @@ export type PublicCase = {
   needs: string[];
   sourceDomain?: string;
   sourceUrl?: string;
+  potentialDuplicateOf?: string;
 };
 
 export const statusLabels: Record<CaseStatus, string> = {

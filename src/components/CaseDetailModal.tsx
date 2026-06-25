@@ -37,6 +37,9 @@ export function CaseDetailModal({
   const [statusFormText, setStatusFormText] = useState("");
   const [isSavingStatus, setIsSavingStatus] = useState(false);
 
+  const [duplicateCase, setDuplicateCase] = useState<any>(null);
+  const [isVotingDuplicate, setIsVotingDuplicate] = useState(false);
+
   const isPerson = item.kind === "missing" || item.kind === "found";
 
   const fetchNotes = async () => {
@@ -53,7 +56,17 @@ export function CaseDetailModal({
 
   useEffect(() => {
     fetchNotes();
-  }, [item.id]);
+    if (item.potentialDuplicateOf) {
+      fetch(`/api/cases/single?id=${item.potentialDuplicateOf}`)
+        .then(res => res.json())
+        .then(data => {
+          if (!data.error) setDuplicateCase(data);
+        })
+        .catch(console.error);
+    } else {
+      setDuplicateCase(null);
+    }
+  }, [item.id, item.potentialDuplicateOf]);
 
   const handleEditSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -198,6 +211,31 @@ export function CaseDetailModal({
     }
   };
 
+  const handleDuplicateVote = async (isDuplicate: boolean) => {
+    setIsVotingDuplicate(true);
+    try {
+      const res = await fetch("/api/cases/duplicate-vote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          caseId: item.id,
+          isDuplicate
+        })
+      });
+      if (res.ok) {
+        if (onClose) onClose();
+        if (onUpdate) onUpdate();
+      } else {
+        alert("Ocurrió un error al procesar el voto.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error de red");
+    } finally {
+      setIsVotingDuplicate(false);
+    }
+  };
+
   const showStatusPill = item.kind === "missing" || item.kind === "found";
 
   return (
@@ -293,6 +331,58 @@ export function CaseDetailModal({
             </form>
           ) : (
             <>
+              {duplicateCase && item.potentialDuplicateOf ? (
+                <div style={{ background: "#fff7ed", padding: "16px", borderRadius: "8px", border: "1px solid #fed7aa", marginBottom: "20px" }}>
+                  <h3 style={{ color: "#c2410c", marginTop: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    ⚠️ Posible Registro Duplicado
+                  </h3>
+                  <p style={{ fontSize: "0.9rem", color: "#9a3412", marginBottom: "16px" }}>
+                    Ayúdanos a mantener la base de datos limpia. ¿Es esta la misma persona que el registro original?
+                  </p>
+                  
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+                    <div style={{ padding: "12px", background: "white", borderRadius: "6px", border: "1px solid #fed7aa" }}>
+                      <span className="eyebrow" style={{ color: "#c2410c" }}>Registro Original</span>
+                      <div style={{ fontWeight: "bold", marginBottom: "4px", fontSize: "1.1rem" }}>{duplicateCase.title}</div>
+                      <div style={{ fontSize: "0.85rem", color: "#64748b", marginBottom: "8px" }}>📍 {duplicateCase.zone}</div>
+                      {duplicateCase.photoUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={duplicateCase.photoUrl} alt="Foto original" style={{ width: "100%", height: "120px", objectFit: "cover", borderRadius: "4px" }} />
+                      )}
+                    </div>
+                    
+                    <div style={{ padding: "12px", background: "white", borderRadius: "6px", border: "1px solid #fed7aa" }}>
+                      <span className="eyebrow" style={{ color: "#c2410c" }}>Este Registro (Nuevo)</span>
+                      <div style={{ fontWeight: "bold", marginBottom: "4px", fontSize: "1.1rem" }}>{item.title}</div>
+                      <div style={{ fontSize: "0.85rem", color: "#64748b", marginBottom: "8px" }}>📍 {item.zone}</div>
+                      {item.photoUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={item.photoUrl} alt="Foto nueva" style={{ width: "100%", height: "120px", objectFit: "cover", borderRadius: "4px" }} />
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div style={{ display: "flex", gap: "12px" }}>
+                    <button 
+                      className="primary-button" 
+                      style={{ background: "#c2410c", flex: 1 }} 
+                      disabled={isVotingDuplicate}
+                      onClick={() => handleDuplicateVote(true)}
+                    >
+                      ✅ Sí, son la misma persona
+                    </button>
+                    <button 
+                      className="secondary-button" 
+                      style={{ flex: 1 }}
+                      disabled={isVotingDuplicate}
+                      onClick={() => handleDuplicateVote(false)}
+                    >
+                      ❌ No, son personas distintas
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+
               <div className="title-header-row">
                 <p className="eyebrow">{kindLabels[item.kind]}</p>
                 {isPerson && (

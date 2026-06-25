@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState, useCallback } from "react";
 import { useDebounce } from "use-debounce";
-import { HandHeart, Home as HomeIcon, PawPrint, Siren, UserRoundCheck, UserRoundX, CheckCircle2 } from "lucide-react";
+import { CheckCircle2, UserRoundX, UserRoundCheck, HandHeart, PawPrint, Home as HomeIcon, Siren, FileDigit, Search } from "lucide-react";
 import { CaseCard } from "@/components/CaseCard";
 import { CaseDetailModal } from "@/components/CaseDetailModal";
 import { EmergencyHelpModal } from "@/components/EmergencyHelpModal";
@@ -41,7 +41,7 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
   const [selectedPerson, setSelectedPerson] = useState<PublicCase | null>(null);
   const [showEmergencyHelp, setShowEmergencyHelp] = useState(false);
   const [activeModal] = useState<string | null>(defaultModal);
-  const [globalStats, setGlobalStats] = useState({ open: 0, missing: 0, resolved: 0 });
+  const [globalStats, setGlobalStats] = useState({ open: 0, missing: 0, resolved: 0, duplicates: 0 });
   const [statusFilter, setStatusFilter] = useState("");
 
   useEffect(() => {
@@ -118,7 +118,9 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
       {activeModal && (
         <div className="modal-backdrop" onClick={(e) => {
           if (e.target === e.currentTarget) {
-            window.location.href = "/";
+            setSelectedPerson(null);
+            setShowEmergencyHelp(false);
+            window.location.hash = "";
           }
         }}>
           {activeModal === "desaparecido" && (
@@ -205,12 +207,27 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
           </Link>
           <button className="cta help" onClick={() => setShowEmergencyHelp(true)} type="button">
             <Siren aria-hidden="true" />
-            <span>Pedir ayuda urgente</span>
+            <span>Pedir Ayuda</span>
           </button>
           <Link className="cta volunteer" href="/ayudar">
             <HandHeart aria-hidden="true" />
-            <span>Quiero ayudar cerca</span>
+            <span>Quiero Ayudar (voluntario)</span>
           </Link>
+          <button 
+            className="cta" 
+            style={{ backgroundColor: "#3b82f6" }} 
+            onClick={() => {
+              const el = document.getElementById("search-input");
+              if (el) {
+                el.scrollIntoView({ behavior: "smooth", block: "center" });
+                el.focus();
+              }
+            }} 
+            type="button"
+          >
+            <Search aria-hidden="true" />
+            <span>Buscar persona desaparecida</span>
+          </button>
         </section>
 
         <section className="secondary-cta-grid" aria-label="Mascotas y refugios">
@@ -243,48 +260,55 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
         <section className="quick-stats" aria-label="Contadores">
           <button 
             type="button"
+            className="stat-box"
             onClick={() => { setStatusFilter(""); setPage(1); }} 
             style={{ 
-              cursor: "pointer", 
-              border: statusFilter === "" ? "2px solid currentColor" : undefined,
-              background: "none",
-              padding: "1rem",
-              borderRadius: "8px",
-              textAlign: "left"
+              border: statusFilter === "" ? "2px solid var(--ink)" : undefined,
+              background: "#f1f5f9",
             }}
           >
-            <strong>{globalStats.open}</strong><span>Personas reportadas</span>
+            <strong>{globalStats.open.toLocaleString("es-ES")}</strong><span>Personas reportadas</span>
           </button>
           <button 
             type="button"
+            className="stat-box"
             onClick={() => { setStatusFilter("missing"); setPage(1); }} 
             style={{ 
-              cursor: "pointer", 
-              border: statusFilter === "missing" ? "2px solid currentColor" : undefined,
-              background: "none",
-              padding: "1rem",
-              borderRadius: "8px",
-              textAlign: "left"
+              border: statusFilter === "missing" ? "2px solid #ea580c" : undefined,
+              background: "#ffedd5",
             }}
           >
-            <strong>{globalStats.missing}</strong><span>Aún buscados</span>
+            <strong style={{ color: "var(--ink)" }}>{globalStats.missing.toLocaleString("es-ES")}</strong><span style={{ color: "var(--ink-soft)" }}>Aún buscados</span>
           </button>
           <button 
             type="button"
+            className="stat-box"
             onClick={() => { setStatusFilter("resolved"); setPage(1); }} 
             style={{ 
-              cursor: "pointer", 
-              border: statusFilter === "resolved" ? "2px solid currentColor" : undefined,
-              background: "none",
+              border: statusFilter === "resolved" ? "2px solid #16a34a" : undefined,
+              background: "#dcfce7",
               color: "#16a34a",
-              padding: "1rem",
-              borderRadius: "8px",
-              textAlign: "left"
             }}
           >
-            <strong>{globalStats.resolved}</strong>
+            <strong>{globalStats.resolved.toLocaleString("es-ES")}</strong>
             <span style={{ display: "flex", alignItems: "center", gap: "0.25rem", color: "#16a34a" }}>
               <CheckCircle2 size={16} /> Localizados a salvo
+            </span>
+          </button>
+          
+          <button 
+            type="button"
+            className="stat-box"
+            onClick={() => { setStatusFilter("potential_duplicate"); setPage(1); }} 
+            style={{ 
+              border: statusFilter === "potential_duplicate" ? "2px solid #ea580c" : undefined,
+              background: "#ffedd5",
+              color: "#ea580c",
+            }}
+          >
+            <strong>{globalStats.duplicates.toLocaleString("es-ES")}</strong>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.25rem", color: "#ea580c" }}>
+              <FileDigit size={16} /> Posibles Duplicados
             </span>
           </button>
         </section>
@@ -293,6 +317,8 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
           <label>
             Buscar por nombre
             <input
+              id="search-input"
+              className="search-input"
               value={nameQuery}
               onChange={(event) => {
                 setNameQuery(event.target.value);

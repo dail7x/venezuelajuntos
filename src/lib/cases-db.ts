@@ -207,35 +207,40 @@ export async function getPublicCasesFromDb(page = 1, limit = 100, query = "", zo
              full_name as title_or_name,
              COALESCE(location_zone, last_seen_address, found_address) as zone_or_address,
              COALESCE(physical_desc, found_notes, clothing_desc) as search_desc,
-             status
+             status,
+             potential_duplicate_of
       FROM persons WHERE is_deleted = 0
       UNION ALL
       SELECT id, 'request' as type, updated_at,
              COALESCE(title, request_type) as title_or_name,
              address as zone_or_address,
              description as search_desc,
-             status
+             status,
+             NULL as potential_duplicate_of
       FROM help_requests WHERE is_deleted = 0
       UNION ALL
       SELECT id, 'zone' as type, updated_at,
              title as title_or_name,
              address as zone_or_address,
              description as search_desc,
-             status
+             status,
+             NULL as potential_duplicate_of
       FROM rescue_zones WHERE is_deleted = 0
       UNION ALL
       SELECT id, 'pet' as type, updated_at,
              pet_name as title_or_name,
              zone as zone_or_address,
              description as search_desc,
-             status
+             status,
+             NULL as potential_duplicate_of
       FROM pet_reports WHERE is_deleted = 0
       UNION ALL
       SELECT id, 'shelter' as type, updated_at,
              title as title_or_name,
              zone as zone_or_address,
              description as search_desc,
-             'reported' as status
+             'reported' as status,
+             NULL as potential_duplicate_of
       FROM shelter_reports WHERE is_deleted = 0
     ) unified
     WHERE 1=1
@@ -333,7 +338,11 @@ export async function getGlobalStatsFromDb() {
         SELECT count(*) FROM pet_reports WHERE is_deleted=0 AND status IN ('located', 'reunified')
       ) + (
         SELECT count(*) FROM shelter_reports WHERE is_deleted=0 AND 'reported' IN ('resolved', 'closed')
-      ) AS resolved
+      ) AS resolved,
+
+      (
+        SELECT count(*) FROM persons WHERE is_deleted=0 AND potential_duplicate_of IS NOT NULL
+      ) AS duplicates
   `;
   
   const res = await db.execute(sql);
@@ -341,7 +350,8 @@ export async function getGlobalStatsFromDb() {
   return {
     open: Number(row.open),
     missing: Number(row.missing),
-    resolved: Number(row.resolved)
+    resolved: Number(row.resolved),
+    duplicates: Number(row.duplicates)
   };
 }
 

@@ -19,11 +19,13 @@ Debes devolver un JSON con dos campos:
 
 Dirección cruda: "${rawAddress}"
 
-Devuelve ÚNICAMENTE el JSON, sin texto adicional ni bloques de markdown (ni \`\`\`json). Ejemplo de respuesta: {"location_zone": "La Guaira", "location_normalized": "Edificio Caribe, La Guaira"}`;
+Devuelve ÚNICAMENTE el JSON, sin texto adicional ni bloques de markdown. 
+Ejemplo de formato: {"location_zone": "La Guaira", "location_normalized": "Edificio Los Cocos, Av Principal, La Guaira"}
+IMPORTANTE: Usa los nombres y lugares de la 'Dirección cruda'. NO uses el texto del ejemplo anterior si no está en la 'Dirección cruda'. Si la dirección no menciona edificios, no los inventes. Si no estás seguro o es muy ambigua, simplemente repite la 'Dirección cruda' en 'location_normalized'.`;
 
   try {
     const res = await fetch(
-      `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/@cf/meta/llama-3-8b-instruct`,
+      `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/@cf/meta/llama-3.1-8b-instruct`,
       {
         method: "POST",
         headers: {
@@ -42,11 +44,15 @@ Devuelve ÚNICAMENTE el JSON, sin texto adicional ni bloques de markdown (ni \`\
     }
 
     const data = await res.json();
-    const responseText = data.result?.response || "";
+    const responseRaw = data.result?.response;
+    let parsed: any = {};
     
-    // Parse the JSON (handle potential markdown formatting just in case)
-    const cleanJson = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
-    const parsed = JSON.parse(cleanJson);
+    if (typeof responseRaw === 'string') {
+      const cleanJson = responseRaw.replace(/```json/gi, '').replace(/```/g, '').trim();
+      parsed = JSON.parse(cleanJson);
+    } else if (typeof responseRaw === 'object' && responseRaw !== null) {
+      parsed = responseRaw;
+    }
     
     return {
       location_zone: parsed.location_zone || null,

@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS persons (
   verified_at INTEGER,
   spam INTEGER DEFAULT 0,
   duplicate_of TEXT,
+  potential_duplicate_of TEXT,
   is_deleted INTEGER DEFAULT 0,
   deleted_by TEXT,
   deleted_at INTEGER,

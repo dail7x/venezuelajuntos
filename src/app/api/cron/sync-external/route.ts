@@ -26,7 +26,7 @@ export async function POST(request: Request) {
   let aiProcessedCount = 0;
 
   try {
-    while (hasMore && page <= 5) { // Limit to first 5 pages (500 most recent cases) for routine sync
+    while (hasMore) { 
       const res = await fetch(`https://desaparecidos-terremoto-api.theempire.tech/api/personas?pageSize=${pageSize}&page=${page}`);
       
       if (!res.ok) {
@@ -41,6 +41,8 @@ export async function POST(request: Request) {
         hasMore = false;
         break;
       }
+      
+      let pageHasUpdates = false;
 
       for (const p of items) {
         const id = `ext-${p.id}`;
@@ -58,7 +60,7 @@ export async function POST(request: Request) {
 
         // Check if case already exists to see if we need AI normalization
         const existingRes = await db.execute({
-          sql: `SELECT location_normalized, last_seen_address FROM persons WHERE id = ?`,
+          sql: `SELECT location_normalized, location_zone, last_seen_address, updated_at FROM persons WHERE id = ?`,
           args: [id]
         });
         
@@ -84,11 +86,32 @@ export async function POST(request: Request) {
           location_normalized = existingRow.location_normalized;
         }
 
+        // Skip if already completely up to date
+        if (existingRow && Number(existingRow.updated_at) === Number(updated_at)) {
+          if (existingRow.location_normalized) {
+            continue; // purely up to date
+          }
+        }
+        
+        pageHasUpdates = true;
+
+        // Duplicate detection: if this is a new record or hasn't been checked
+        let potential_duplicate_of = null;
+        if (!existingRow) {
+          const dupRes = await db.execute({
+            sql: `SELECT id FROM persons WHERE lower(full_name) = lower(?) AND id != ? LIMIT 1`,
+            args: [full_name.trim(), id]
+          });
+          if (dupRes.rows.length > 0) {
+            potential_duplicate_of = dupRes.rows[0].id;
+          }
+        }
+
         await db.execute({
           sql: `INSERT INTO persons (
             id, source, source_url, created_at, updated_at, full_name, age_estimated,
-            status, last_seen_address, location_zone, location_normalized, physical_desc, photo_url, author_contact
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            status, last_seen_address, location_zone, location_normalized, physical_desc, photo_url, author_contact, potential_duplicate_of
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           ON CONFLICT(id) DO UPDATE SET
             updated_at = excluded.updated_at,
             full_name = excluded.full_name,
@@ -99,14 +122,20 @@ export async function POST(request: Request) {
             location_normalized = COALESCE(excluded.location_normalized, persons.location_normalized),
             physical_desc = excluded.physical_desc,
             photo_url = excluded.photo_url,
-            author_contact = excluded.author_contact`,
+            author_contact = excluded.author_contact,
+            potential_duplicate_of = COALESCE(persons.potential_duplicate_of, excluded.potential_duplicate_of)`,
           args: [
             id, source, source_url, created_at, updated_at, full_name, age_estimated,
-            status, last_seen_address, location_zone, location_normalized, physical_desc, photo_url, author_contact
+            status, last_seen_address, location_zone, location_normalized, physical_desc, photo_url, author_contact, potential_duplicate_of
           ]
         });
         
         totalImported++;
+      }
+
+      if (!pageHasUpdates) {
+        console.log(`Page ${page} had no new updates. Stopping early.`);
+        break;
       }
 
       if (page >= json.totalPages) {

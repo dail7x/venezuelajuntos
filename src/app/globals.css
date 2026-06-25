@@ -126,9 +126,22 @@ h2 { font-size: clamp(1.35rem, 3vw, 2rem); }
 .quick-stats strong { display: block; font-size: 2.15rem; }
 .quick-stats span { color: var(--ink-soft); }
 
+.stat-box {
+  cursor: pointer;
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: left;
+  border: 1px solid var(--line);
+  background: white;
+  transition: opacity 0.2s;
+}
+.stat-box:active {
+  opacity: 0.8;
+}
+
 .cta-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
   margin: clamp(18px, 4vw, 36px) 0 16px;
 }
@@ -851,18 +864,18 @@ textarea { resize: vertical; }
     line-height: 1.32;
   }
   .quick-stats {
-    grid-template-columns: repeat(4, minmax(76px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 8px;
     margin: 12px 0 22px;
     overflow-x: auto;
     padding-bottom: 2px;
   }
-  .quick-stats div {
-    min-height: 70px;
+  .stat-box {
     padding: 10px;
+    min-height: 70px;
   }
   .quick-stats strong {
-    font-size: 1.7rem;
+    font-size: clamp(1.4rem, 6vw, 1.7rem);
   }
   .quick-stats span {
     font-size: .78rem;

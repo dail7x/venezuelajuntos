@@ -117,6 +117,15 @@ export function ReportForm({
         <Link href="/" aria-label="Cerrar">x</Link>
       </div>
 
+      {(kind === "missing" || kind === "found") && (
+        <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", padding: "12px 16px", borderRadius: "8px", marginBottom: "1.5rem" }}>
+          <p style={{ margin: 0, fontSize: "0.9rem", color: "#1e3a8a", lineHeight: 1.5 }}>
+            <strong>¿Ya buscaste en los registros?</strong> 
+            <br/>Antes de agregar a esta persona, te invitamos a buscar rápidamente en la página principal. Quizás alguien más ya la reportó, y así nos ayudas a mantener todo organizado y a agilizar los reencuentros. ❤️
+          </p>
+        </div>
+      )}
+
       {kind !== "volunteer" && (
         <>
           <label className="upload-box" aria-label="Carga de foto">
