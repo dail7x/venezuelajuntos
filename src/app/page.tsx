@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { HandHeart, Home as HomeIcon, PawPrint, Siren, UserRoundCheck, UserRoundX } from "lucide-react";
 import { CaseCard } from "@/components/CaseCard";
 import { CaseDetailModal } from "@/components/CaseDetailModal";
@@ -11,6 +11,17 @@ import { Header } from "@/components/Header";
 import { MapPanel } from "@/components/MapPanel";
 import { getStats, seedCases, type PublicCase } from "@/lib/data";
 import { venezuelaZones } from "@/lib/venezuela-zones";
+
+import { ReportForm } from "@/components/ReportForm";
+import {
+  missingFields,
+  foundFields,
+  petLostFields,
+  petFoundFields,
+  shelterRequestFields,
+  shelterOfferFields,
+  helpFields,
+} from "@/lib/forms";
 
 function normalize(value: string) {
   return value
@@ -29,13 +40,14 @@ function caseMatches(item: PublicCase, nameQuery: string, zoneQuery: string) {
   return (!nameNeedle || nameHaystack.includes(nameNeedle)) && (!zoneNeedle || zoneHaystack.includes(zoneNeedle));
 }
 
-export default function Home() {
+export default function Home({ defaultModal = null }: { defaultModal?: string | null }) {
   const [cases, setCases] = useState<PublicCase[]>(seedCases);
   const [nameQuery, setNameQuery] = useState("");
   const [zoneQuery, setZoneQuery] = useState("");
   const [dataSource, setDataSource] = useState<"seed" | "db" | "loading">("loading");
   const [selectedPerson, setSelectedPerson] = useState<PublicCase | null>(null);
   const [showEmergencyHelp, setShowEmergencyHelp] = useState(false);
+  const [activeModal] = useState<string | null>(defaultModal);
 
   useEffect(() => {
     let cancelled = false;
@@ -56,6 +68,24 @@ export default function Home() {
     };
   }, []);
 
+  const refreshCases = useCallback(() => {
+    fetch("/api/cases")
+      .then((response) => response.json())
+      .then((result: { data?: PublicCase[]; source?: "seed" | "db" }) => {
+        if (Array.isArray(result.data)) {
+          setCases(result.data);
+          setDataSource(result.source ?? "seed");
+          if (selectedPerson) {
+            const updated = result.data.find((c) => c.id === selectedPerson.id);
+            if (updated) {
+              setSelectedPerson(updated);
+            }
+          }
+        }
+      })
+      .catch(() => {});
+  }, [selectedPerson]);
+
   const stats = getStats(cases);
   const filteredCases = useMemo(
     () => cases.filter((item) => caseMatches(item, nameQuery, zoneQuery)),
@@ -68,8 +98,77 @@ export default function Home() {
   return (
     <>
       <Header />
-      {selectedPerson ? <CaseDetailModal item={selectedPerson} onClose={() => setSelectedPerson(null)} /> : null}
+      {selectedPerson ? <CaseDetailModal item={selectedPerson} onClose={() => setSelectedPerson(null)} onUpdate={refreshCases} /> : null}
       {showEmergencyHelp ? <EmergencyHelpModal onClose={() => setShowEmergencyHelp(false)} /> : null}
+
+      {activeModal && (
+        <div className="modal-backdrop" onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            window.location.href = "/";
+          }
+        }}>
+          {activeModal === "desaparecido" && (
+            <ReportForm
+              kind="missing"
+              title="Reportar a una persona desaparecida"
+              subtitle="Comparte lo que sepas. Cada dato ayuda a que alguien la reconozca."
+              fields={missingFields}
+            />
+          )}
+          {activeModal === "encontrado" && (
+            <ReportForm
+              kind="found"
+              title="Reportar una persona encontrada"
+              subtitle="Registra información con cuidado. Las coincidencias las revisa un equipo de verificación."
+              fields={foundFields}
+            />
+          )}
+          {activeModal === "mascota-perdida" && (
+            <ReportForm
+              fields={petLostFields}
+              kind="pet_lost"
+              submitLabel="Publicar mascota perdida"
+              subtitle="Registra zona, descripción y contacto. La foto ayuda mucho a reconocerla."
+              title="Reportar mascota perdida"
+            />
+          )}
+          {activeModal === "mascota-encontrada" && (
+            <ReportForm
+              fields={petFoundFields}
+              kind="pet_found"
+              submitLabel="Publicar mascota recuperada"
+              subtitle="Indica dónde está, su estado y si puedes tenerla temporalmente en tránsito."
+              title="Reportar mascota recuperada"
+            />
+          )}
+          {activeModal === "solicitar-refugio" && (
+            <ReportForm
+              fields={shelterRequestFields}
+              kind="shelter_request"
+              submitLabel="Solicitar refugio"
+              subtitle="Esto ayuda a buscar match con refugios cercanos y a entregar datos agregados."
+              title="Solicitar refugio"
+            />
+          )}
+          {activeModal === "ofrecer-refugio" && (
+            <ReportForm
+              fields={shelterOfferFields}
+              kind="shelter_offer"
+              submitLabel="Ofrecer refugio"
+              subtitle="Registra casas, canchas, iglesias, galpones u otros espacios disponibles."
+              title="Ofrecer refugio"
+            />
+          )}
+          {activeModal === "pedir-ayuda" && (
+            <ReportForm
+              kind="help"
+              title="Pedir ayuda urgente"
+              subtitle="Indica qué ocurre, dónde y qué recursos hacen falta."
+              fields={helpFields}
+            />
+          )}
+        </div>
+      )}
       <main className="home">
         <section className="hero">
           <div className="hero-copy">
@@ -165,9 +264,9 @@ export default function Home() {
           ))}
         </datalist>
 
-        <section className="home-map-section">
+        {/* <section className="home-map-section">
           <MapPanel cases={filteredCases} compact />
-        </section>
+        </section> */}
 
         <section className="people-section">
           <div className="section-heading">
@@ -181,18 +280,6 @@ export default function Home() {
           ) : (
             <div className="empty-state">No hay personas que coincidan con esa busqueda.</div>
           )}
-        </section>
-
-        <section className="priority-section">
-          <div>
-            <div className="section-heading">
-              <p className="eyebrow">Prioridad ahora</p>
-              <h2>Casos urgentes</h2>
-            </div>
-            <div className="case-list">
-              {(urgentCases.length ? urgentCases : filteredCases).slice(0, 3).map((item) => <CaseCard key={item.id} item={item} />)}
-            </div>
-          </div>
         </section>
       </main>
     </>

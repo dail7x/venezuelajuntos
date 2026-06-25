@@ -19,6 +19,18 @@ function dateIso(value: unknown) {
   return new Date().toISOString();
 }
 
+function resolvePhotoUrl(url: string): string {
+  if (!url) return "";
+  if (url.startsWith("/api/images")) return url;
+
+  const r2Match = url.match(/r2\.cloudflarestorage\.com\/[^/]+\/(reports\/.+)$/);
+  if (r2Match) {
+    return `/api/images?key=${r2Match[1]}`;
+  }
+
+  return url;
+}
+
 function personStatus(status: string): CaseStatus {
   if (status === "located" || status === "alive_located") return "located";
   if (status === "reunified") return "reunified";
@@ -70,7 +82,7 @@ function mapPerson(row: Row): PublicCase {
     updatedAt: dateIso(row.updated_at),
     lastConfirmedAt: dateIso(row.updated_at),
     description: text(row.physical_desc || row.found_notes || row.clothing_desc, "Reporte pendiente de verificacion."),
-    photoUrl: text(row.photo_url),
+    photoUrl: resolvePhotoUrl(text(row.photo_url)),
     reporterPublic: text(row.author_relation, "Reporte ciudadano"),
     signals: signals(),
     sensitiveHidden: true,
@@ -151,7 +163,7 @@ function mapPet(row: Row): PublicCase {
     updatedAt: dateIso(row.updated_at),
     lastConfirmedAt: dateIso(row.updated_at),
     description: text(row.description, "Reporte de mascota pendiente de verificacion."),
-    photoUrl: text(row.photo_url),
+    photoUrl: resolvePhotoUrl(text(row.photo_url)),
     reporterPublic: "Contacto protegido",
     signals: signals(),
     sensitiveHidden: true,
@@ -215,7 +227,11 @@ export async function createCaseInDb(kind: string, payload: Record<string, unkno
   if (kind === "missing" || kind === "found") {
     const image = await uploadReportImage(payload.photoDataUrl, "persons");
     const isFound = kind === "found";
-    const fullName = text(payload.fullName || payload.knownName, isFound ? "Nombre por confirmar" : "Persona sin nombre confirmado");
+    const fName = typeof payload.firstName === "string" ? payload.firstName.trim() : "";
+    const lName = typeof payload.lastName === "string" ? payload.lastName.trim() : "";
+    const combinedName = fName && lName ? `${fName} ${lName}` : fName || lName;
+
+    const fullName = text(payload.fullName || combinedName || payload.knownName, isFound ? "Nombre por confirmar" : "Persona sin nombre confirmado");
     const address = text(payload.lastSeenAddress || payload.currentLocation, "Zona por confirmar");
     const description = text(payload.physicalDesc || payload.description || payload.observations, "Sin descripcion adicional.");
 
@@ -231,7 +247,11 @@ export async function createCaseInDb(kind: string, payload: Record<string, unkno
         now,
         now,
         text(payload.authorName || payload.reporterName),
-        text(payload.authorContact || payload.reporterContact),
+        text(
+          payload.authorInstagram
+            ? `${payload.authorContact || payload.reporterContact} (IG: ${payload.authorInstagram})`
+            : (payload.authorContact || payload.reporterContact)
+        ),
         text(payload.authorRelation || payload.reporterName),
         fullName,
         text(payload.alternateNames),

@@ -44,10 +44,14 @@ export function ReportForm({
   const [photoName, setPhotoName] = useState("");
   const zoneListId = `${kind}-venezuela-zones`;
 
+  const [wasAccompanied, setWasAccompanied] = useState(false);
+
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setState("saving");
-    const form = new FormData(event.currentTarget);
+    setWasAccompanied(false);
+    const formEl = event.currentTarget;
+    const form = new FormData(formEl);
     const payload = Object.fromEntries(form.entries());
     if (photoDataUrl) payload.photoDataUrl = photoDataUrl;
     const response = await fetch("/api/cases", {
@@ -55,11 +59,43 @@ export function ReportForm({
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ kind, payload }),
     }).catch(() => null);
-    setState(response?.ok ? "saved" : "error");
+    
     if (response?.ok) {
-      event.currentTarget.reset();
-      setPhotoDataUrl("");
-      setPhotoName("");
+      setState("saved");
+      const hasAccompanied = formEl.elements.namedItem("hasAccompanied") as HTMLInputElement | null;
+      const isAccompaniedChecked = hasAccompanied?.checked;
+      
+      if (isAccompaniedChecked) {
+        setWasAccompanied(true);
+        // Clear only personal fields
+        const personalFields = [
+          "firstName",
+          "lastName",
+          "alternateNames",
+          "age",
+          "sex",
+          "physicalDesc",
+          "hasAccompanied"
+        ];
+        for (const name of personalFields) {
+          const el = formEl.elements.namedItem(name) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
+          if (el) {
+            if (el.type === "checkbox") {
+              (el as HTMLInputElement).checked = false;
+            } else {
+              el.value = "";
+            }
+          }
+        }
+        setPhotoDataUrl("");
+        setPhotoName("");
+      } else {
+        formEl.reset();
+        setPhotoDataUrl("");
+        setPhotoName("");
+      }
+    } else {
+      setState("error");
     }
   }
 
@@ -81,20 +117,24 @@ export function ReportForm({
         <Link href="/" aria-label="Cerrar">x</Link>
       </div>
 
-      <label className="upload-box" aria-label="Carga de foto">
-        <div className="upload-icon">↑</div>
-        <div>
-          <strong>Foto o evidencia</strong>
-          <span>{photoName ? `Lista: ${photoName}` : "Opcional. Se optimiza antes de guardar."}</span>
-        </div>
-        <input accept="image/*" className="file-input" onChange={onPhotoChange} type="file" />
-      </label>
-      {photoDataUrl ? (
-        <div className="image-preview">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img alt="Vista previa de la foto cargada" src={photoDataUrl} />
-        </div>
-      ) : null}
+      {kind !== "volunteer" && (
+        <>
+          <label className="upload-box" aria-label="Carga de foto">
+            <div className="upload-icon">↑</div>
+            <div>
+              <strong>Foto o evidencia</strong>
+              <span>{photoName ? `Lista: ${photoName}` : "Opcional. Se optimiza antes de guardar."}</span>
+            </div>
+            <input accept="image/*" className="file-input" onChange={onPhotoChange} type="file" />
+          </label>
+          {photoDataUrl ? (
+            <div className="image-preview">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img alt="Vista previa de la foto cargada" src={photoDataUrl} />
+            </div>
+          ) : null}
+        </>
+      )}
 
       <div className="form-grid">
         {fields.map((field) => (
@@ -132,16 +172,19 @@ export function ReportForm({
         ))}
       </datalist>
 
-      <div className="privacy-box">
-        <strong>Datos protegidos</strong>
-        Telefonos, direcciones exactas, condicion medica y fotos sensibles no se muestran en la ficha publica.
-      </div>
+
 
       <footer className="form-actions">
         <Link className="secondary-button" href="/">Cancelar</Link>
         <button disabled={state === "saving"}>{state === "saving" ? "Guardando..." : submitLabel} →</button>
       </footer>
-      {state === "saved" ? <p className="success">Reporte recibido. Queda pendiente de verificacion y posible deduplicacion.</p> : null}
+      {state === "saved" ? (
+        <p className="success">
+          {wasAccompanied
+            ? "Primer reporte guardado con éxito. Los datos de contacto y ubicación se han mantenido. Puedes ingresar los datos del acompañante en el formulario a continuación."
+            : "Reporte recibido. Queda pendiente de verificacion y posible deduplicacion."}
+        </p>
+      ) : null}
       {state === "error" ? <p className="error">No se pudo guardar. Intenta de nuevo o contacta al equipo operativo.</p> : null}
     </form>
   );

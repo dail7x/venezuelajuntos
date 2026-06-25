@@ -11,16 +11,12 @@ export default function VolunteerPage() {
         <ReportForm
           kind="volunteer"
           title="Quiero ayudar cerca de mi"
-          subtitle="Haz check-in de disponibilidad. Los check-ins activos se consideran vigentes por 4 horas."
+          subtitle="Registra tu disponibilidad."
           fields={volunteerFields}
           submitLabel="Registrar disponibilidad"
         />
         <aside>
           <MapPanel />
-          <div className="privacy-box">
-            <strong>Matching operativo</strong>
-            Se prioriza por urgencia, habilidades, distancia, frescura del reporte y senales de confianza.
-          </div>
         </aside>
       </main>
     </>

@@ -189,6 +189,11 @@ h2 { font-size: clamp(1.35rem, 3vw, 2rem); }
   padding: 18px;
   border-block: 1px solid var(--line);
 }
+.search-band label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 .search-actions {
   display: grid;
   gap: 6px;
@@ -913,3 +918,327 @@ textarea { resize: vertical; }
     grid-template-columns: 1fr;
   }
 }
+
+/* Styling for Report Forms inside modal backdrop overlay */
+.modal-backdrop .report-shell {
+  position: relative;
+  width: min(840px, 100%);
+  max-height: min(90vh, calc(100vh - 32px));
+  overflow-y: auto;
+  margin: 0;
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(13, 36, 84, 0.2);
+}
+
+/* Condensing form layouts and fields for space optimization */
+.report-shell input:not([type="checkbox"]), 
+.report-shell textarea, 
+.report-shell select {
+  padding: 8px 12px;
+  margin-top: 4px;
+}
+.report-shell label span {
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+.report-shell .form-grid {
+  gap: 12px 20px;
+  padding: 0 clamp(16px, 4vw, 32px) clamp(16px, 4vw, 32px);
+}
+.report-shell .upload-box {
+  margin: clamp(12px, 4vw, 20px);
+  padding: 16px;
+  gap: 14px;
+}
+.report-shell .upload-icon {
+  width: 48px;
+  height: 48px;
+  font-size: 1.4rem;
+}
+.report-shell .form-heading {
+  padding: clamp(16px, 4vw, 24px);
+}
+.report-shell .form-heading h1 {
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+}
+.report-shell .privacy-box {
+  margin: 0 clamp(16px, 4vw, 32px) 16px;
+  padding: 12px;
+}
+.report-shell .form-actions {
+  padding: 16px clamp(16px, 4vw, 32px);
+}
+.report-shell .secondary-button, 
+.report-shell .form-actions button {
+  min-height: 44px;
+  padding-inline: 20px;
+}
+
+/* Align and style checkbox inputs correctly */
+.report-shell label:has(input[type="checkbox"]) {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 4px 0;
+}
+.report-shell label:has(input[type="checkbox"]) input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-top: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.report-shell label:has(input[type="checkbox"]) span {
+  margin-bottom: 0;
+}
+
+/* Styling for action buttons inside the CaseDetailModal */
+.case-modal .case-modal-actions h3 {
+  font-size: 0.85rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+  margin-top: 18px;
+}
+.case-modal .signal-grid {
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+  margin-bottom: 0;
+}
+.case-modal .signal-grid button {
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  min-height: 38px;
+  cursor: pointer;
+}
+
+/* Status Pill over photo */
+.case-modal-media {
+  position: relative;
+}
+.photo-pill {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 10;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+}
+.photo-pill.missing {
+  background: #e11d48; /* Crimson rose */
+}
+.photo-pill.located {
+  background: #10b981; /* Emerald */
+}
+
+/* Modal Title Header Row & Edit Button */
+.title-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.edit-trigger-button {
+  background: var(--wash);
+  border: 1px solid var(--line);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--ink);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+.edit-trigger-button:hover {
+  background: var(--line);
+}
+
+/* Edit Form inside Modal */
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.edit-form h2 {
+  margin: 0;
+}
+.edit-form .form-row {
+  display: flex;
+  flex-direction: column;
+}
+.edit-form .form-row.split-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 580px) {
+  .edit-form .form-row.split-2 {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+.edit-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.edit-form label span {
+  font-size: 0.82rem;
+  font-weight: 900;
+  color: var(--ink-soft);
+}
+.edit-form input:not([type="checkbox"]),
+.edit-form select,
+.edit-form textarea {
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: white;
+  color: var(--ink);
+  font-size: 0.92rem;
+}
+.edit-form .admin-pw-row input {
+  border-color: #f59e0b; /* Alerting color for admin password field */
+  background: #fffbeb;
+}
+.edit-form .admin-pw-row input:focus {
+  border-color: #d97706;
+  outline: none;
+}
+.error-banner {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  color: #dc2626;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+.edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+/* Case Updates / Notes Section */
+.case-updates-section h3 {
+  font-size: 0.95rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 12px;
+}
+.case-updates-section .timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding-right: 4px;
+  margin-bottom: 20px;
+}
+.case-update-card {
+  background: var(--wash);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.update-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+  font-size: 0.8rem;
+}
+.admin-badge {
+  color: #d97706;
+  font-weight: 900;
+}
+.user-badge {
+  color: var(--ink);
+  font-weight: 900;
+}
+.update-time {
+  color: var(--ink-soft);
+}
+.update-text {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  color: var(--ink);
+  white-space: pre-wrap;
+}
+
+/* Add Note Form */
+.add-note-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+}
+.add-note-form h4 {
+  margin: 0 0 4px;
+  font-size: 0.88rem;
+  font-weight: 900;
+  color: var(--ink);
+}
+.add-note-form textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 0.88rem;
+  resize: vertical;
+  background: white;
+}
+.note-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 8px;
+}
+@media (max-width: 580px) {
+  .note-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.add-note-form input {
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  background: white;
+}
+.add-note-form button {
+  background: var(--ink);
+  color: white;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 900;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+.add-note-form button:hover {
+  opacity: 0.9;
+}
+
+
+

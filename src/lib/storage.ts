@@ -76,6 +76,6 @@ export async function uploadReportImage(dataUrl: unknown, prefix: string): Promi
 
   return {
     key,
-    url: `${config.publicBaseUrl}/${key}`,
+    url: `/api/images?key=${key}`,
   };
 }

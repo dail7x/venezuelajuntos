@@ -23,18 +23,19 @@ export function CaseCard({ item, onOpen }: { item: PublicCase; onOpen?: (item: P
     </>
   );
 
+  if (onOpen) {
+    return (
+      <article className={`case-card ${item.urgency}`} style={{ cursor: 'pointer' }} onClick={() => onOpen(item)}>
+        {content}
+      </article>
+    );
+  }
+
   return (
-    <article className={`case-card ${item.urgency}`}>
-      {content}
-      {onOpen ? (
-        <button className="text-action card-action" onClick={() => onOpen(item)} type="button">
-          Ver ficha
-        </button>
-      ) : (
-        <Link className="text-action" href={`/casos/${item.slug}`}>
-          Ver ficha
-        </Link>
-      )}
-    </article>
+    <Link href={`/casos/${item.slug}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+      <article className={`case-card ${item.urgency}`}>
+        {content}
+      </article>
+    </Link>
   );
 }

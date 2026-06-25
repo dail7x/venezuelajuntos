@@ -1,11 +1,13 @@
 import { notFound } from "next/navigation";
 import { Header } from "@/components/Header";
 import { SignalButtons } from "@/components/SignalButtons";
-import { getCase, kindLabels, statusLabels, urgencyLabels } from "@/lib/data";
+import { kindLabels, statusLabels, urgencyLabels } from "@/lib/data";
+import { getPublicCasesFromDb } from "@/lib/cases-db";
 
 export default async function CasePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const item = getCase(id);
+  const cases = await getPublicCasesFromDb();
+  const item = cases.find(c => c.id === id || c.slug === id);
   if (!item) notFound();
 
   return (
@@ -13,6 +15,12 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
       <Header />
       <main className="case-detail">
         <section className={`detail-hero ${item.urgency}`}>
+          {item.photoUrl && (
+            <div className="case-detail-media">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img alt={`Foto de ${item.title}`} src={item.photoUrl} style={{ width: '100%', maxHeight: '400px', objectFit: 'cover', borderRadius: '8px', marginBottom: '16px' }} />
+            </div>
+          )}
           <div>
             <p className="eyebrow">{kindLabels[item.kind]}</p>
             <h1>{item.title}</h1>
@@ -45,7 +53,7 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
 
         <section className="actions-panel">
           <h2>Actualizar este caso</h2>
-          <SignalButtons caseId={item.id} />
+          <SignalButtons caseId={item.id} kind={item.kind} />
           <a className="primary-link" href="/pedir-ayuda">Necesito ayuda similar en esta zona</a>
         </section>
       </main>

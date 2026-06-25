@@ -9,17 +9,18 @@ export type Field = {
 };
 
 export const missingFields: Field[] = [
-  { name: "fullName", label: "Nombre y apellido", required: true, placeholder: "Ej. Maria Fernanda Rangel" },
+  { name: "firstName", label: "Nombre", required: true, placeholder: "Ej. María" },
+  { name: "lastName", label: "Apellido", required: true, placeholder: "Ej. Rangel" },
   { name: "alternateNames", label: "Apodo o nombre conocido", placeholder: "Opcional" },
-  { name: "age", label: "Edad aproximada", type: "number", placeholder: "Anos" },
-  { name: "sex", label: "Sexo/genero", type: "select", options: [{ label: "No especificar", value: "" }, { label: "Femenino", value: "F" }, { label: "Masculino", value: "M" }, { label: "Otro / desconocido", value: "unknown" }] },
-  { name: "lastSeenAddress", label: "Ultima ubicacion vista", required: true, placeholder: "Ej. Catia La Mar, La Guaira", autocomplete: "venezuela-zones" },
-  { name: "lastSeenAt", label: "Desde cuando sin contacto", type: "datetime-local" },
-  { name: "physicalDesc", label: "Descripcion y senas particulares", type: "textarea", placeholder: "Estatura, contextura, cicatrices, lentes, condicion medica privada..." },
-  { name: "clothingDesc", label: "Ropa vista por ultima vez", type: "textarea", placeholder: "Colores, zapatos, bolso, casco..." },
+  { name: "age", label: "Edad aproximada", type: "number", placeholder: "Años" },
+  { name: "sex", label: "Sexo/género", type: "select", options: [{ label: "No especificar", value: "" }, { label: "Femenino", value: "F" }, { label: "Masculino", value: "M" }, { label: "Otro / desconocido", value: "unknown" }] },
+  { name: "lastSeenAddress", label: "Última ubicación vista", required: true, placeholder: "Ej. Catia La Mar, La Guaira", autocomplete: "venezuela-zones" },
+  { name: "physicalDesc", label: "Descripción y señas particulares", type: "textarea", placeholder: "Estatura, contextura, cicatrices, lentes, condición médica privada..." },
   { name: "authorName", label: "Nombre del reportante", required: true, placeholder: "Tu nombre" },
-  { name: "authorRelation", label: "Relacion con la persona", placeholder: "Familiar, amigo, vecino..." },
-  { name: "authorContact", label: "Telefono/WhatsApp del reportante", type: "tel", required: true, placeholder: "+58..." },
+  { name: "authorRelation", label: "Relación con la persona", placeholder: "Familiar, amigo, vecino..." },
+  { name: "authorContact", label: "Teléfono/WhatsApp del reportante", type: "tel", required: true, placeholder: "+58..." },
+  { name: "authorInstagram", label: "Usuario de Instagram (opcional)", placeholder: "Ej. @usuario" },
+  { name: "hasAccompanied", label: "¿Estaba acompañada o buscas a otra persona en la misma ubicación? (Permite guardar y registrar otra persona con los mismos datos de contacto y ubicación)", type: "checkbox" },
 ];
 
 export const petLostFields: Field[] = [
@@ -35,7 +36,6 @@ export const petLostFields: Field[] = [
   { name: "description", label: "Descripcion", type: "textarea", required: true, placeholder: "Color, tamano, senas, collar, comportamiento..." },
   { name: "contactName", label: "Nombre de contacto", required: true },
   { name: "contactPhone", label: "Telefono/WhatsApp", type: "tel", required: true },
-  { name: "canFoster", label: "Me ofrezco para tenerla en transito si aparece", type: "checkbox" },
 ];
 
 export const petFoundFields: Field[] = [
@@ -117,6 +117,7 @@ export const helpFields: Field[] = [
 
 export const volunteerFields: Field[] = [
   { name: "name", label: "Nombre", required: true },
+  { name: "email", label: "Correo electrónico", type: "email", required: true },
   { name: "contact", label: "Telefono/WhatsApp", type: "tel", required: true },
   { name: "zone", label: "Zona actual", required: true, placeholder: "Ciudad, municipio o barrio", autocomplete: "venezuela-zones" },
   { name: "canMove", label: "Puedo moverme", type: "checkbox" },
