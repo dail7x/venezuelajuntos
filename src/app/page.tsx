@@ -320,7 +320,7 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
           >
             <strong>{globalStats.duplicates.toLocaleString("es-ES")}</strong>
             <span style={{ display: "flex", alignItems: "center", gap: "0.25rem", color: "#ea580c" }}>
-              <FileDigit size={16} /> Revisar repetidos
+              <FileDigit size={16} /> Posibles registros duplicados
             </span>
           </button>
         </section>

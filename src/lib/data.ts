@@ -34,6 +34,7 @@ export type PublicCase = {
   lastConfirmedAt?: string;
   description: string;
   photoUrl?: string;
+  foundNotes?: string;
   reporterPublic: string;
   reporterName?: string;
   reporterContact?: string;
@@ -49,6 +50,7 @@ export type PublicCase = {
   sourceDomain?: string;
   sourceUrl?: string;
   potentialDuplicateOf?: string;
+  duplicates?: PublicCase[];
 };
 
 export const statusLabels: Record<CaseStatus, string> = {

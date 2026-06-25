@@ -1,0 +1,1402 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cruce de Coincidencias - Hospital Pérez Carreño</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0b0f19;
+      --card-bg: #151d30;
+      --card-border: rgba(255, 255, 255, 0.05);
+      --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+      --btn-bg: rgba(59, 130, 246, 0.15);
+      --btn-hover: rgba(59, 130, 246, 0.3);
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      padding: 2.5rem 1.5rem;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 3.5rem;
+      position: relative;
+    }
+
+    header::after {
+      content: '';
+      position: absolute;
+      bottom: -1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 4px;
+      background: var(--accent-gradient);
+      border-radius: 2px;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      margin-bottom: 0.5rem;
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      color: var(--text-sub);
+      font-size: 1.1rem;
+      font-weight: 400;
+    }
+
+    .stats-container {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+      flex-wrap: wrap;
+    }
+
+    .stat-badge {
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid var(--card-border);
+      padding: 0.75rem 1.5rem;
+      border-radius: 50px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text-sub);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      backdrop-filter: blur(10px);
+    }
+
+    .stat-badge strong {
+      color: var(--text-main);
+    }
+
+    .patient-section {
+      background: rgba(21, 29, 48, 0.4);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      margin-bottom: 3rem;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .patient-banner {
+      background: rgba(30, 41, 59, 0.8);
+      padding: 1.25rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--card-border);
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .patient-title-group {
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+    }
+
+    .patient-name {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .patient-ci {
+      font-size: 0.95rem;
+      color: var(--text-sub);
+      background: rgba(255, 255, 255, 0.05);
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+    }
+
+    .badge-match {
+      background: var(--accent-gradient);
+      padding: 0.4rem 1rem;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+    }
+
+    .candidates-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 1.5rem;
+      padding: 2rem;
+    }
+
+    .candidate-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.25s ease, border-color 0.25s ease;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    }
+
+    .candidate-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(59, 130, 246, 0.4);
+    }
+
+    .candidate-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .candidate-name {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .status-badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+    }
+
+    .status-badge.missing {
+      background-color: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .status-badge.located {
+      background-color: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .candidate-info {
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+      color: var(--text-sub);
+    }
+
+    .candidate-info p {
+      margin-bottom: 0.5rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .candidate-info p strong {
+      color: var(--text-main);
+      margin-bottom: 0.15rem;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .candidate-info a {
+      color: #3b82f6;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .candidate-info a:hover {
+      text-decoration: underline;
+    }
+
+    .empty {
+      font-style: italic;
+      color: rgba(255, 255, 255, 0.25);
+    }
+
+    .contact-box {
+      background: rgba(11, 15, 25, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: auto;
+    }
+
+    .contact-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--text-sub);
+      letter-spacing: 0.05em;
+    }
+
+    .btn-copy {
+      background: var(--btn-bg);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: #60a5fa;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-copy:hover {
+      background: var(--btn-hover);
+    }
+
+    .contact-body {
+      font-size: 0.95rem;
+    }
+
+    .contact-name {
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .contact-value {
+      color: #60a5fa;
+      font-family: monospace;
+      font-size: 1rem;
+      margin: 0.25rem 0;
+    }
+
+    .contact-relation {
+      font-size: 0.8rem;
+      color: var(--text-sub);
+      font-style: italic;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 5rem;
+      color: var(--text-sub);
+      font-size: 0.85rem;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      color: var(--text-main);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      transform: translateY(150%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 1000;
+      font-weight: 500;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+    }
+
+    @media (max-width: 768px) {
+      .candidates-grid {
+        grid-template-columns: 1fr;
+        padding: 1rem;
+      }
+      .patient-banner {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>Cruce de Coincidencias</h1>
+      <p class="subtitle">Análisis del Hospital Pérez Carreño · Terremoto de Venezuela 2026</p>
+    </header>
+
+    <div class="stats-container">
+      <div class="stat-badge">
+        Origen de datos: <strong>X / WhatsApp</strong>
+      </div>
+      <div class="stat-badge">
+        Pacientes Analizados: <strong>105</strong>
+      </div>
+      <div class="stat-badge">
+        Coincidencias de Alta Confianza: <strong>11</strong>
+      </div>
+    </div>
+
+    
+      <div class="patient-section">
+        <div class="patient-banner">
+          <div class="patient-title-group">
+            <h3 class="patient-name">Ibsen Iglesias</h3>
+            <span class="patient-ci">C.I. 32359883</span>
+          </div>
+          <div class="badge-match">Posibilidad Alta</div>
+        </div>
+        <div class="candidates-grid">
+          
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">Ibsen iglesias</h4>
+          <span class="status-badge missing">missing</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-p06b159d2db41" target="_blank">ext-p06b159d2db41</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> 19 años</p>
+          <p><strong>Última ubicación vista:</strong> La Guaira</p>
+          <p><strong>Descripción física:</strong> Alto, flaco y blanco</p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, '04245821816')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">04245821816</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">Ibsen iglesias</h4>
+          <span class="status-badge located">located</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-p19b196cf6cda" target="_blank">ext-p19b196cf6cda</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> 19 años</p>
+          <p><strong>Última ubicación vista:</strong> Edificio frente al hotel playa grande Caride La Guaira</p>
+          <p><strong>Descripción física:</strong> Alto , delgado , color blanco.  Con cabello corto y oscuro</p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, 'Grelismar tua tuagrelismar@gmail.com')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">Grelismar tua tuagrelismar@gmail.com</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">Ibsen José iglesias piña</h4>
+          <span class="status-badge missing">missing</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-p246ef52da828" target="_blank">ext-p246ef52da828</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> 19 años</p>
+          <p><strong>Última ubicación vista:</strong> Se encontraba en un edificio frente al hotel playa  grande caribe. Puerto viejo</p>
+          <p><strong>Descripción física:</strong> Flaco de 1.70 de altura ojos claros cabello castaño</p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, 'Genesis Piña 04245737694')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">Genesis Piña 04245737694</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">Ibsen iglesias</h4>
+          <span class="status-badge missing">missing</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-pc38222bcf59f" target="_blank">ext-pc38222bcf59f</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> 19 años</p>
+          <p><strong>Última ubicación vista:</strong> Alfrente el hotel playa grande caribe</p>
+          <p><strong>Descripción física:</strong> <span class="empty">No especificada</span></p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, '04245058696')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">04245058696</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">Ibsen Jose Iglesias</h4>
+          <span class="status-badge located">located</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-pc6c7cd1f0510" target="_blank">ext-pc6c7cd1f0510</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> 19 años</p>
+          <p><strong>Última ubicación vista:</strong> Catia</p>
+          <p><strong>Descripción física:</strong> <span class="empty">No especificada</span></p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, 'Henery Iglesias +14698169547')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">Henery Iglesias +14698169547</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">Ibsen José iglesias</h4>
+          <span class="status-badge missing">missing</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-pe81c2fbaa946" target="_blank">ext-pe81c2fbaa946</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> 19 años</p>
+          <p><strong>Última ubicación vista:</strong> Puerto viejo  frente al hotel playa caribe</p>
+          <p><strong>Descripción física:</strong> Mide como 1,77 contextura delgada , lo busca toda su familia en cambural</p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, 'Kenderson paredes, 04245855179')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">Kenderson paredes, 04245855179</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">Ibsen iglesias</h4>
+          <span class="status-badge missing">missing</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-pffb5f4fb0620" target="_blank">ext-pffb5f4fb0620</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> 19 años</p>
+          <p><strong>Última ubicación vista:</strong> Puerto viejo catia la mar la guira</p>
+          <p><strong>Descripción física:</strong> Ibsen Jose iglesias estatura de 1.75cm pesa como 65kg es de piel clara</p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, '04245786119')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">04245786119</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+        </div>
+      </div>
+    
+      <div class="patient-section">
+        <div class="patient-banner">
+          <div class="patient-title-group">
+            <h3 class="patient-name">Lourdes Oropeza</h3>
+            <span class="patient-ci">C.I. 14312752</span>
+          </div>
+          <div class="badge-match">Posibilidad Alta</div>
+        </div>
+        <div class="candidates-grid">
+          
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">Lourdes Oropeza</h4>
+          <span class="status-badge missing">missing</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-p78540cd75b9c" target="_blank">ext-p78540cd75b9c</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> 56 años</p>
+          <p><strong>Última ubicación vista:</strong> Catia la mar Suma</p>
+          <p><strong>Descripción física:</strong> Pelo negro ondulado, HIPERTENSA, de tez blanca</p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, 'Gigliola Blanco +51918622140')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">Gigliola Blanco +51918622140</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">Lourdes Oropeza</h4>
+          <span class="status-badge missing">missing</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-pa1a505b77d18" target="_blank">ext-pa1a505b77d18</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> 54 años</p>
+          <p><strong>Última ubicación vista:</strong> Catia la mar</p>
+          <p><strong>Descripción física:</strong> Mi mamá blanca con el cabello negro largo y ondulado, tuvo una fractura en una mano hace un año así que lo tiene lastimado</p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, 'Gigliola Blanco +51918622140')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">Gigliola Blanco +51918622140</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+        </div>
+      </div>
+    
+      <div class="patient-section">
+        <div class="patient-banner">
+          <div class="patient-title-group">
+            <h3 class="patient-name">Alvaro Ortiz</h3>
+            <span class="patient-ci">C.I. 4163469</span>
+          </div>
+          <div class="badge-match">Posibilidad Alta</div>
+        </div>
+        <div class="candidates-grid">
+          
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">Álvaro Enrique Ortiz Arismendi</h4>
+          <span class="status-badge missing">missing</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-p6ff7a15ad31a" target="_blank">ext-p6ff7a15ad31a</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> 72 años</p>
+          <p><strong>Última ubicación vista:</strong> Catia la Mar</p>
+          <p><strong>Descripción física:</strong> Señor mayor de 72 años. Vive solo en la zona de catia la mar.</p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, 'Michel Seijas 04122762602 alorismendi47@gmail.com')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">Michel Seijas 04122762602 alorismendi47@gmail.com</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+        </div>
+      </div>
+    
+      <div class="patient-section">
+        <div class="patient-banner">
+          <div class="patient-title-group">
+            <h3 class="patient-name">Barbara Ramirez</h3>
+            <span class="patient-ci">C.I. 18461886</span>
+          </div>
+          <div class="badge-match">Posibilidad Alta</div>
+        </div>
+        <div class="candidates-grid">
+          
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">Barbara Ramirez</h4>
+          <span class="status-badge missing">missing</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-p021c3a8efd1c" target="_blank">ext-p021c3a8efd1c</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> 30 años</p>
+          <p><strong>Última ubicación vista:</strong> Los Corales, La guaira</p>
+          <p><strong>Descripción física:</strong> <span class="empty">No especificada</span></p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, 'Walter Heine +16788993789 Waltereatl@gmail.com')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">Walter Heine +16788993789 Waltereatl@gmail.com</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">Barbara Ramirez</h4>
+          <span class="status-badge missing">missing</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-p4b15d9f41b92" target="_blank">ext-p4b15d9f41b92</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> 36 años</p>
+          <p><strong>Última ubicación vista:</strong> Naiguata</p>
+          <p><strong>Descripción física:</strong> 1,60 mts  cabello largo marron
+Vive Barrio san antonio calle 11 naiguata</p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, '')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">No especificado</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">Barbara ramirez</h4>
+          <span class="status-badge missing">missing</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-pba1a5f1e88f4" target="_blank">ext-pba1a5f1e88f4</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> 37 años</p>
+          <p><strong>Última ubicación vista:</strong> Naiguata</p>
+          <p><strong>Descripción física:</strong> 1.60 mts cabello largo marron 
+Barrio san antonio calle 11</p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, 'Beycker Ramirez +13854090392')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">Beycker Ramirez +13854090392</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">Barbara Ramirez</h4>
+          <span class="status-badge missing">missing</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-pf9c08d13972a" target="_blank">ext-pf9c08d13972a</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> 30 años</p>
+          <p><strong>Última ubicación vista:</strong> LOS CORALES, LA GUAIRA</p>
+          <p><strong>Descripción física:</strong> <span class="empty">No especificada</span></p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, 'Walter Heine +16788993789 Waltereatl@gmail.com')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">Walter Heine +16788993789 Waltereatl@gmail.com</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+        </div>
+      </div>
+    
+      <div class="patient-section">
+        <div class="patient-banner">
+          <div class="patient-title-group">
+            <h3 class="patient-name">Maria Moreno</h3>
+            <span class="patient-ci">C.I. 5613119</span>
+          </div>
+          <div class="badge-match">Posibilidad Alta</div>
+        </div>
+        <div class="candidates-grid">
+          
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">Maria Gabriela Moreno izturiz</h4>
+          <span class="status-badge missing">missing</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-p51b138588741" target="_blank">ext-p51b138588741</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> 42 años</p>
+          <p><strong>Última ubicación vista:</strong> La guaira</p>
+          <p><strong>Descripción física:</strong> Aprox 1.65, tiene un lunar en la cadera izquierda, tiene el pelo largo negro cejas delgadas ojos almendrados grandes</p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, 'Fabian 0412-0445079')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">Fabian 0412-0445079</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">María Gabriela Moreno Istúriz</h4>
+          <span class="status-badge missing">missing</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-p73387cad9d89" target="_blank">ext-p73387cad9d89</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> 35 años</p>
+          <p><strong>Última ubicación vista:</strong> Residencias Miramar la Guaira</p>
+          <p><strong>Descripción física:</strong> Moreno delgada, cabello negro liso.</p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, 'Natacha Huenchullan 04242856160')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">Natacha Huenchullan 04242856160</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">María Gabriela Moreno</h4>
+          <span class="status-badge missing">missing</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-pa9700097173a" target="_blank">ext-pa9700097173a</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> 41 años</p>
+          <p><strong>Última ubicación vista:</strong> Caribe</p>
+          <p><strong>Descripción física:</strong> Delgada, morena clara, cabello castaño oscuro y aprox 1.55</p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, 'Elaimy Moreno 04241478960')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">Elaimy Moreno 04241478960</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">Isabel Lopez, Mauricio Moncada, Maria Moreno</h4>
+          <span class="status-badge missing">missing</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-pd3d4196b5e74" target="_blank">ext-pd3d4196b5e74</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> <span class="empty">No especificada</span></p>
+          <p><strong>Última ubicación vista:</strong> Naiguata, La guaira</p>
+          <p><strong>Descripción física:</strong> <span class="empty">No especificada</span></p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, '04122566103')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">04122566103</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">Maria Gabriela Moreno izturiz</h4>
+          <span class="status-badge missing">missing</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-pece5c4c84f7c" target="_blank">ext-pece5c4c84f7c</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> 42 años</p>
+          <p><strong>Última ubicación vista:</strong> La guaira</p>
+          <p><strong>Descripción física:</strong> Aprox 1.65 y 1.67 pelo negro largo tiene un lunar en la cadera izquierda, morena cejas delgadas, ojo almendrado anchos</p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, 'Fabian 04120445079')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">Fabian 04120445079</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+        </div>
+      </div>
+    
+      <div class="patient-section">
+        <div class="patient-banner">
+          <div class="patient-title-group">
+            <h3 class="patient-name">Juan Garcia</h3>
+            <span class="patient-ci">C.I. 17755829</span>
+          </div>
+          <div class="badge-match">Posibilidad Alta</div>
+        </div>
+        <div class="candidates-grid">
+          
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">Juan García</h4>
+          <span class="status-badge missing">missing</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-p78f61f7f7cbb" target="_blank">ext-p78f61f7f7cbb</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> 56 años</p>
+          <p><strong>Última ubicación vista:</strong> Catia la mar</p>
+          <p><strong>Descripción física:</strong> <span class="empty">No especificada</span></p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, '')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">No especificado</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">Haydee María, Juan Garcia</h4>
+          <span class="status-badge missing">missing</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-p941b73a59aab" target="_blank">ext-p941b73a59aab</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> <span class="empty">No especificada</span></p>
+          <p><strong>Última ubicación vista:</strong> Catia la Mar</p>
+          <p><strong>Descripción física:</strong> Estaban con sus niños, gemelos Alonzo y Gabriel.</p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, '04124780233')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">04124780233</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">Juan Carlos García Sánchez</h4>
+          <span class="status-badge missing">missing</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-pb8906dde547f" target="_blank">ext-pb8906dde547f</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> 51 años</p>
+          <p><strong>Última ubicación vista:</strong> Residencias viento y mar macuto la guaira</p>
+          <p><strong>Descripción física:</strong> 1,77cm. Piel blanca, cabello negro.</p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, 'Pierina Pretto +19048402029')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">Pierina Pretto +19048402029</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+        </div>
+      </div>
+    
+      <div class="patient-section">
+        <div class="patient-banner">
+          <div class="patient-title-group">
+            <h3 class="patient-name">Jose Gutierrez</h3>
+            <span class="patient-ci">C.I. 28747519</span>
+          </div>
+          <div class="badge-match">Posibilidad Alta</div>
+        </div>
+        <div class="candidates-grid">
+          
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">José Miguel Gutiérrez</h4>
+          <span class="status-badge missing">missing</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-p2f8bf6473a35" target="_blank">ext-p2f8bf6473a35</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> <span class="empty">No especificada</span></p>
+          <p><strong>Última ubicación vista:</strong> Difícil playa grande La guaira</p>
+          <p><strong>Descripción física:</strong> <span class="empty">No especificada</span></p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, '04129212138')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">04129212138</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">Leiverson José Gutiérrez Montiel</h4>
+          <span class="status-badge missing">missing</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-p32b76dfdb0fc" target="_blank">ext-p32b76dfdb0fc</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> <span class="empty">No especificada</span></p>
+          <p><strong>Última ubicación vista:</strong> La guaira bajada del playon cerca de corapal</p>
+          <p><strong>Descripción física:</strong> <span class="empty">No especificada</span></p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, 'elluzmendez@gmail.com')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">elluzmendez@gmail.com</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">José Miguel Gutiérrez</h4>
+          <span class="status-badge missing">missing</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-p58733ad6b318" target="_blank">ext-p58733ad6b318</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> <span class="empty">No especificada</span></p>
+          <p><strong>Última ubicación vista:</strong> La guaira</p>
+          <p><strong>Descripción física:</strong> Alto, tez oscura, de 60 y pico a 70 años.</p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, 'Michel 04129212138')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">Michel 04129212138</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">José Gutiérrez</h4>
+          <span class="status-badge missing">missing</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-pc90b44742d5a" target="_blank">ext-pc90b44742d5a</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> 64 años</p>
+          <p><strong>Última ubicación vista:</strong> Catia La Mar</p>
+          <p><strong>Descripción física:</strong> 1.80. negro.</p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, 'Marisela 04149107578')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">Marisela 04149107578</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+        </div>
+      </div>
+    
+      <div class="patient-section">
+        <div class="patient-banner">
+          <div class="patient-title-group">
+            <h3 class="patient-name">Diego Garcia</h3>
+            <span class="patient-ci">C.I. 33423811</span>
+          </div>
+          <div class="badge-match">Posibilidad Alta</div>
+        </div>
+        <div class="candidates-grid">
+          
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">Diego Alejandro García Mendoza</h4>
+          <span class="status-badge missing">missing</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-p5bcd8f10b817" target="_blank">ext-p5bcd8f10b817</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> 17 años</p>
+          <p><strong>Última ubicación vista:</strong> Los corales residencia coral plaza</p>
+          <p><strong>Descripción física:</strong> <span class="empty">No especificada</span></p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, '04241564823')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">04241564823</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">Diego garcia</h4>
+          <span class="status-badge located">located</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-p6ad73260b4d3" target="_blank">ext-p6ad73260b4d3</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> 17 años</p>
+          <p><strong>Última ubicación vista:</strong> Los corales, edif residencias coral plaza</p>
+          <p><strong>Descripción física:</strong> Pequeño.</p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, 'Mariana ruiz 04162970806')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">Mariana ruiz 04162970806</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+        </div>
+      </div>
+    
+      <div class="patient-section">
+        <div class="patient-banner">
+          <div class="patient-title-group">
+            <h3 class="patient-name">Juan Salazar</h3>
+            <span class="patient-ci">C.I. 27044236</span>
+          </div>
+          <div class="badge-match">Posibilidad Alta</div>
+        </div>
+        <div class="candidates-grid">
+          
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">JUAN CARLOS VILLARREAL SALAZAR</h4>
+          <span class="status-badge missing">missing</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-p3e0556545205" target="_blank">ext-p3e0556545205</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> <span class="empty">No especificada</span></p>
+          <p><strong>Última ubicación vista:</strong> Naiguata</p>
+          <p><strong>Descripción física:</strong> No sabemos dónde estaba la última vez</p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, 'Ayerin +58 414-1067057 gabybanco25@gmail.com')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">Ayerin +58 414-1067057 gabybanco25@gmail.com</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">Juan Carlos Salazar López</h4>
+          <span class="status-badge missing">missing</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-p4dd4adb7ebff" target="_blank">ext-p4dd4adb7ebff</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> 18 años</p>
+          <p><strong>Última ubicación vista:</strong> La Guaira</p>
+          <p><strong>Descripción física:</strong> persona baja de estatura</p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, '04241714774 o 04245647528')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">04241714774 o 04245647528</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">Juan e Ivonne Salazar</h4>
+          <span class="status-badge missing">missing</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-pe1e17e492e98" target="_blank">ext-pe1e17e492e98</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> 13 años</p>
+          <p><strong>Última ubicación vista:</strong> playa grande la guaira</p>
+          <p><strong>Descripción física:</strong> niño menor flaco y alto y mujer mayor</p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, '04124790322')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">04124790322</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+        </div>
+      </div>
+    
+      <div class="patient-section">
+        <div class="patient-banner">
+          <div class="patient-title-group">
+            <h3 class="patient-name">Isabel Gonzales</h3>
+            <span class="patient-ci">C.I. 29701695</span>
+          </div>
+          <div class="badge-match">Posibilidad Alta</div>
+        </div>
+        <div class="candidates-grid">
+          
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">Isabel Valero de Gonzáles</h4>
+          <span class="status-badge missing">missing</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-p138990882fed" target="_blank">ext-p138990882fed</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> <span class="empty">No especificada</span></p>
+          <p><strong>Última ubicación vista:</strong> Catia La Mar, La Guaira.</p>
+          <p><strong>Descripción física:</strong> <span class="empty">No especificada</span></p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, '+58 414-6574925 Carlos Medina Valero')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">+58 414-6574925 Carlos Medina Valero</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+        </div>
+      </div>
+    
+      <div class="patient-section">
+        <div class="patient-banner">
+          <div class="patient-title-group">
+            <h3 class="patient-name">Maria Zamora</h3>
+            <span class="patient-ci">C.I. 27044236</span>
+          </div>
+          <div class="badge-match">Posibilidad Alta</div>
+        </div>
+        <div class="candidates-grid">
+          
+      <div class="candidate-card">
+        <div class="candidate-header">
+          <h4 class="candidate-name">María Alejandra silva Zamora</h4>
+          <span class="status-badge missing">missing</span>
+        </div>
+        <div class="candidate-info">
+          <p><strong>ID Ficha:</strong> <a href="https://venezuelajuntos.online/case/ext-p2c08e21e1bb0" target="_blank">ext-p2c08e21e1bb0</a></p>
+          <p><strong>C.I. / Nombres alternos:</strong> <span class="empty">No especificado</span></p>
+          <p><strong>Edad estimada:</strong> 17 años</p>
+          <p><strong>Última ubicación vista:</strong> Naiguata playa grande</p>
+          <p><strong>Descripción física:</strong> Bajita morena pelo estirado</p>
+        </div>
+        
+        <div class="contact-box">
+          <div class="contact-header">
+            <span>Contacto de Familia</span>
+            <button class="btn-copy" onclick="copyText(this, 'Mariela tortolero 04126898012')">Copiar</button>
+          </div>
+          <div class="contact-body">
+            <p class="contact-name">Ciudadano</p>
+            <p class="contact-value">Mariela tortolero 04126898012</p>
+            <p class="contact-relation">Relación no especificada</p>
+          </div>
+        </div>
+      </div>
+    
+        </div>
+      </div>
+    
+
+    <footer>
+      <p>© 2026 VenezuelaJuntos · Desarrollado para coordinación y asistencia de rescate en emergencias.</p>
+    </footer>
+  </div>
+
+  <div id="toast" class="toast">¡Copiado al portapapeles!</div>
+
+  <script>
+    function copyText(button, text) {
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(() => {
+        const originalText = button.innerText;
+        button.innerText = 'Copiado';
+        button.style.background = 'rgba(16, 185, 129, 0.2)';
+        button.style.color = '#34d399';
+        button.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+        
+        const toast = document.getElementById('toast');
+        toast.classList.add('show');
+
+        setTimeout(() => {
+          button.innerText = originalText;
+          button.style.background = '';
+          button.style.color = '';
+          button.style.borderColor = '';
+          toast.classList.remove('show');
+        }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>
+  

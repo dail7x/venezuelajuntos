@@ -15,6 +15,7 @@ function loadLocalEnv() {
   }
 }
 
+console.log("SCRIPT STARTING");
 loadLocalEnv();
 
 const url = process.env.DATABASE_URL;
@@ -574,3 +575,9 @@ function generateHtmlReport(data) {
 </html>
   `;
 }
+
+run().catch(err => {
+  console.error("Execution failed:", err);
+  process.exit(1);
+});
+

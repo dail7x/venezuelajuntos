@@ -82,14 +82,16 @@ function mapPerson(row: Row): PublicCase {
     createdAt: dateIso(row.created_at),
     updatedAt: dateIso(row.updated_at),
     lastConfirmedAt: dateIso(row.updated_at),
-    description: text(row.physical_desc || row.found_notes || row.clothing_desc, "Información pendiente de revisión."),
+    description: text(row.physical_desc || row.clothing_desc, "Información pendiente de revisión."),
     photoUrl: resolvePhotoUrl(text(row.photo_url)),
+    foundNotes: text(row.found_notes) || undefined,
     reporterPublic: text(row.author_relation, "Reporte ciudadano"),
     reporterName: text(row.author_name) || undefined,
     reporterContact: text(row.author_contact) || undefined,
     signals: signals(),
     sensitiveHidden: true,
     needs: status === "missing" ? ["Información confirmada", "Cruce con personas localizadas"] : ["Verificación familiar"],
+    potentialDuplicateOf: text(row.potential_duplicate_of) || undefined,
   };
 }
 
@@ -217,7 +219,7 @@ export async function getPublicCasesFromDb(page = 1, limit = 100, query = "", zo
       SELECT id, 'person' as type, updated_at,
              full_name as title_or_name,
              COALESCE(location_zone, last_seen_address, found_address) as zone_or_address,
-             COALESCE(physical_desc, found_notes, clothing_desc) as search_desc,
+             COALESCE(physical_desc, clothing_desc) as search_desc,
              status,
              potential_duplicate_of
       FROM persons WHERE is_deleted = 0 ${hasUpdates ? "AND EXISTS (SELECT 1 FROM person_notes WHERE person_id = persons.id)" : ""}
@@ -312,7 +314,22 @@ export async function getPublicCasesFromDb(page = 1, limit = 100, query = "", zo
   ];
   
   const casesMap = new Map(publicCases.map(c => [c.id, c]));
-  const sortedCases = unifiedRes.rows.map(r => casesMap.get(r.id as string)).filter(Boolean) as PublicCase[];
+  
+  const groupedCases = new Map<string, PublicCase>();
+  
+  for (const c of publicCases) {
+    if (c.potentialDuplicateOf) {
+      const parent = casesMap.get(c.potentialDuplicateOf);
+      if (parent) {
+         if (!parent.duplicates) parent.duplicates = [];
+         parent.duplicates.push(c);
+         continue; 
+      }
+    }
+    groupedCases.set(c.id, c);
+  }
+
+  const sortedCases = unifiedRes.rows.map(r => groupedCases.get(r.id as string)).filter(Boolean) as PublicCase[];
 
   return { items: sortedCases, total };
 }

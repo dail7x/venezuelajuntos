@@ -87,6 +87,10 @@ export async function POST(request: Request) {
         const updated_at = p.updatedAt || Date.now();
         const full_name = p.nombre || "Desconocido";
         const age_estimated = p.edad || null;
+        // Solo guardamos como missing inicialmente en este script rápido. 
+        // Si ya viene localizado desde la API externa, podríamos saltarlo o guardarlo, 
+        // pero preferiblemente que el update-status se encargue. 
+        // Sin embargo, para no perderlos si fueron localizados el mismo día, los guardamos y el status lo maneja update-status.
         const status = p.estado === "localizado" ? "located" : "missing";
         const last_seen_address = p.ubicacion || "Desconocida";
         const physical_desc = p.descripcion || null;
@@ -170,6 +174,7 @@ export async function POST(request: Request) {
 
       if (!pageHasUpdates) {
         console.log(`Page ${page} had no new updates. Stopping early.`);
+        break; // DONT FETCH OLD PAGES IF WE ALREADY HAVE THEM
       }
 
       if (page >= json.totalPages) {

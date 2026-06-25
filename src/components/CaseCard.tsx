@@ -51,6 +51,49 @@ export function CaseCard({ item, onOpen }: { item: PublicCase; onOpen?: (item: P
       <p style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'var(--wash)', padding: '4px 8px', borderRadius: '6px', fontSize: '0.85rem', color: 'var(--ink-soft)', margin: 0 }}>
         <MapPin size={14} /> {item.publicAddress}
       </p>
+      {isFound && item.foundNotes && (
+        <div style={{ marginTop: "1rem", fontSize: "0.85rem", color: "var(--ink-soft)", background: "var(--green-light, #e0f2e9)", padding: "8px", borderRadius: "8px", whiteSpace: 'pre-line' }}>
+          <strong>Detalles de localización:</strong><br />
+          {item.foundNotes}
+        </div>
+      )}
+      
+      {item.duplicates && item.duplicates.length > 0 && (
+        <div style={{ marginTop: "1rem", borderTop: "1px solid var(--wash-dark)", paddingTop: "1rem" }}>
+          <h4 style={{ margin: "0 0 8px 0", fontSize: "0.9rem", color: "var(--ink-main)" }}>Actualizaciones de la comunidad</h4>
+          
+          {/* Gallery of duplicate photos if any have unique photos */}
+          {(() => {
+            const uniquePhotos = new Set<string>();
+            if (item.photoUrl) uniquePhotos.add(item.photoUrl);
+            
+            const extraPhotos = item.duplicates.map(d => d.photoUrl).filter(Boolean) as string[];
+            extraPhotos.forEach(p => uniquePhotos.add(p));
+            
+            if (uniquePhotos.size > 1) {
+              const allPhotos = Array.from(uniquePhotos);
+              return (
+                <div style={{ display: "flex", gap: "8px", overflowX: "auto", marginBottom: "12px", paddingBottom: "4px" }}>
+                  {allPhotos.map((url, i) => (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img key={i} src={url.split(',')[0]} alt="Foto adicional" style={{ height: "60px", width: "60px", objectFit: "cover", borderRadius: "8px", flexShrink: 0 }} />
+                  ))}
+                </div>
+              );
+            }
+            return null;
+          })()}
+
+          {item.duplicates.map((dup) => (
+            <div key={dup.id} style={{ background: "var(--wash)", padding: "8px", borderRadius: "6px", marginBottom: "8px", fontSize: "0.85rem" }}>
+              <div style={{ fontWeight: "bold" }}>Reporte similar: {dup.title}</div>
+              {dup.reporterName && <div>Por: {dup.reporterName}</div>}
+              {dup.description && <div style={{ color: "var(--ink-soft)", marginTop: "4px" }}>{dup.description}</div>}
+            </div>
+          ))}
+        </div>
+      )}
+
       {item.sourceDomain && (
         <div style={{ marginTop: "1rem", fontSize: "0.85rem", color: "#5b6b7b", borderTop: "1px solid #e6ecf2", paddingTop: "0.5rem" }}>
           {item.sourceUrl ? (
