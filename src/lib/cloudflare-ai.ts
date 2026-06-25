@@ -118,7 +118,7 @@ Devuelve ÚNICAMENTE el JSON, sin markdown, sin explicaciones.`;
       {
         method: "POST",
         headers: {
-          "Authorization": \`Bearer \${apiToken}\`,
+          "Authorization": `Bearer ${apiToken}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ messages }),
