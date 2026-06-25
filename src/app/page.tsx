@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { HandHeart, Siren, UserRoundCheck, UserRoundX } from "lucide-react";
+import { HandHeart, Home as HomeIcon, PawPrint, Siren, UserRoundCheck, UserRoundX } from "lucide-react";
 import { CaseCard } from "@/components/CaseCard";
+import { CaseDetailModal } from "@/components/CaseDetailModal";
+import { EmergencyHelpModal } from "@/components/EmergencyHelpModal";
 import { EmergencyNotice } from "@/components/Notice";
 import { Header } from "@/components/Header";
 import { MapPanel } from "@/components/MapPanel";
@@ -31,6 +33,8 @@ export default function Home() {
   const [nameQuery, setNameQuery] = useState("");
   const [zoneQuery, setZoneQuery] = useState("");
   const [dataSource, setDataSource] = useState<"seed" | "db" | "loading">("loading");
+  const [selectedPerson, setSelectedPerson] = useState<PublicCase | null>(null);
+  const [showEmergencyHelp, setShowEmergencyHelp] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -63,6 +67,8 @@ export default function Home() {
   return (
     <>
       <Header />
+      {selectedPerson ? <CaseDetailModal item={selectedPerson} onClose={() => setSelectedPerson(null)} /> : null}
+      {showEmergencyHelp ? <EmergencyHelpModal onClose={() => setShowEmergencyHelp(false)} /> : null}
       <main className="home">
         <section className="hero">
           <div className="hero-copy">
@@ -77,19 +83,38 @@ export default function Home() {
         <section className="cta-grid" aria-label="Acciones principales">
           <Link className="cta missing" href="/reportar/desaparecido">
             <UserRoundX aria-hidden="true" />
-            <span>Reportar desaparecida</span>
+            <span>Reportar persona desaparecida</span>
           </Link>
           <Link className="cta found" href="/reportar/encontrado">
             <UserRoundCheck aria-hidden="true" />
-            <span>Reportar encontrada</span>
+            <span>Reportar persona encontrada</span>
           </Link>
-          <Link className="cta help" href="/pedir-ayuda">
+          <button className="cta help" onClick={() => setShowEmergencyHelp(true)} type="button">
             <Siren aria-hidden="true" />
             <span>Pedir ayuda urgente</span>
-          </Link>
+          </button>
           <Link className="cta volunteer" href="/ayudar">
             <HandHeart aria-hidden="true" />
             <span>Quiero ayudar cerca</span>
+          </Link>
+        </section>
+
+        <section className="secondary-cta-grid" aria-label="Mascotas y refugios">
+          <Link className="secondary-cta" href="/reportar/mascota-perdida">
+            <PawPrint aria-hidden="true" />
+            <span>Reportar mascota perdida</span>
+          </Link>
+          <Link className="secondary-cta" href="/reportar/mascota-encontrada">
+            <PawPrint aria-hidden="true" />
+            <span>Reportar mascota recuperada</span>
+          </Link>
+          <Link className="secondary-cta" href="/refugio/solicitar">
+            <HomeIcon aria-hidden="true" />
+            <span>Solicitar refugio</span>
+          </Link>
+          <Link className="secondary-cta" href="/refugio/ofrecer">
+            <HomeIcon aria-hidden="true" />
+            <span>Ofrecer refugio</span>
           </Link>
         </section>
 
@@ -144,7 +169,7 @@ export default function Home() {
           </div>
           {peopleCases.length ? (
             <div className="people-grid">
-              {peopleCases.map((item) => <CaseCard key={item.id} item={item} />)}
+              {peopleCases.map((item) => <CaseCard key={item.id} item={item} onOpen={setSelectedPerson} />)}
             </div>
           ) : (
             <div className="empty-state">No hay personas que coincidan con esa busqueda.</div>

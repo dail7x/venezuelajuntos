@@ -1,4 +1,4 @@
-export type CaseKind = "missing" | "found" | "help" | "zone";
+export type CaseKind = "missing" | "found" | "help" | "zone" | "pet_lost" | "pet_found" | "shelter_request" | "shelter_offer";
 export type Urgency = "critical" | "high" | "medium" | "low";
 export type CaseStatus =
   | "reported"
@@ -32,6 +32,7 @@ export type PublicCase = {
   updatedAt: string;
   lastConfirmedAt?: string;
   description: string;
+  photoUrl?: string;
   reporterPublic: string;
   signals: {
     confirmed: number;
@@ -72,6 +73,10 @@ export const kindLabels: Record<CaseKind, string> = {
   found: "Persona encontrada",
   help: "Solicitud de ayuda",
   zone: "Zona de rescate",
+  pet_lost: "Mascota perdida",
+  pet_found: "Mascota recuperada",
+  shelter_request: "Solicitud de refugio",
+  shelter_offer: "Refugio disponible",
 };
 
 export const seedCases: PublicCase[] = [

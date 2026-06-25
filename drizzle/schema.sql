@@ -1,4 +1,4 @@
-CREATE TABLE persons (
+CREATE TABLE IF NOT EXISTS persons (
   id TEXT PRIMARY KEY,
   pfif_person_id TEXT UNIQUE,
   source TEXT NOT NULL DEFAULT 'web_form',
@@ -39,7 +39,7 @@ CREATE TABLE persons (
   deletion_reason TEXT
 );
 
-CREATE TABLE person_notes (
+CREATE TABLE IF NOT EXISTS person_notes (
   id TEXT PRIMARY KEY,
   person_id TEXT NOT NULL REFERENCES persons(id),
   created_at INTEGER NOT NULL,
@@ -57,7 +57,7 @@ CREATE TABLE person_notes (
   contact_if_found TEXT
 );
 
-CREATE TABLE rescue_zones (
+CREATE TABLE IF NOT EXISTS rescue_zones (
   id TEXT PRIMARY KEY,
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL,
@@ -96,7 +96,7 @@ CREATE TABLE rescue_zones (
   is_deleted INTEGER DEFAULT 0
 );
 
-CREATE TABLE help_requests (
+CREATE TABLE IF NOT EXISTS help_requests (
   id TEXT PRIMARY KEY,
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL,
@@ -133,7 +133,7 @@ CREATE TABLE help_requests (
   is_deleted INTEGER DEFAULT 0
 );
 
-CREATE TABLE volunteers (
+CREATE TABLE IF NOT EXISTS volunteers (
   id TEXT PRIMARY KEY,
   registered_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL,
@@ -161,7 +161,7 @@ CREATE TABLE volunteers (
   is_deleted INTEGER DEFAULT 0
 );
 
-CREATE TABLE volunteer_checkins (
+CREATE TABLE IF NOT EXISTS volunteer_checkins (
   id TEXT PRIMARY KEY,
   volunteer_id TEXT NOT NULL REFERENCES volunteers(id),
   checked_in_at INTEGER NOT NULL,
@@ -176,7 +176,7 @@ CREATE TABLE volunteer_checkins (
   notes TEXT
 );
 
-CREATE TABLE case_signals (
+CREATE TABLE IF NOT EXISTS case_signals (
   id TEXT PRIMARY KEY,
   created_at INTEGER NOT NULL,
   entity_type TEXT NOT NULL,
@@ -187,7 +187,7 @@ CREATE TABLE case_signals (
   note TEXT
 );
 
-CREATE TABLE moderation_log (
+CREATE TABLE IF NOT EXISTS moderation_log (
   id TEXT PRIMARY KEY,
   created_at INTEGER NOT NULL,
   moderator_id TEXT,
@@ -199,10 +199,50 @@ CREATE TABLE moderation_log (
   metadata TEXT
 );
 
-CREATE INDEX persons_status_idx ON persons(status);
-CREATE INDEX persons_name_idx ON persons(full_name);
-CREATE INDEX persons_location_idx ON persons(last_seen_lat, last_seen_lng);
-CREATE INDEX rescue_zones_status_idx ON rescue_zones(status, urgency);
-CREATE INDEX rescue_zones_location_idx ON rescue_zones(lat, lng);
-CREATE INDEX help_requests_status_idx ON help_requests(status, urgency, request_type);
-CREATE INDEX volunteer_checkins_active_idx ON volunteer_checkins(checked_out_at, checked_in_at);
+CREATE TABLE IF NOT EXISTS pet_reports (
+  id TEXT PRIMARY KEY,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL,
+  report_kind TEXT NOT NULL,
+  pet_name TEXT,
+  pet_type TEXT NOT NULL,
+  status TEXT,
+  description TEXT NOT NULL,
+  zone TEXT NOT NULL,
+  contact_name TEXT,
+  contact_phone TEXT NOT NULL,
+  can_foster INTEGER DEFAULT 0,
+  photo_url TEXT,
+  verified INTEGER DEFAULT 0,
+  duplicate_of TEXT,
+  is_deleted INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS shelter_reports (
+  id TEXT PRIMARY KEY,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL,
+  report_kind TEXT NOT NULL,
+  title TEXT NOT NULL,
+  shelter_type TEXT,
+  zone TEXT NOT NULL,
+  contact_name TEXT,
+  contact_phone TEXT NOT NULL,
+  capacity INTEGER,
+  group_size INTEGER,
+  needs TEXT,
+  description TEXT NOT NULL,
+  verified INTEGER DEFAULT 0,
+  duplicate_of TEXT,
+  is_deleted INTEGER DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS persons_status_idx ON persons(status);
+CREATE INDEX IF NOT EXISTS persons_name_idx ON persons(full_name);
+CREATE INDEX IF NOT EXISTS persons_location_idx ON persons(last_seen_lat, last_seen_lng);
+CREATE INDEX IF NOT EXISTS rescue_zones_status_idx ON rescue_zones(status, urgency);
+CREATE INDEX IF NOT EXISTS rescue_zones_location_idx ON rescue_zones(lat, lng);
+CREATE INDEX IF NOT EXISTS help_requests_status_idx ON help_requests(status, urgency, request_type);
+CREATE INDEX IF NOT EXISTS volunteer_checkins_active_idx ON volunteer_checkins(checked_out_at, checked_in_at);
+CREATE INDEX IF NOT EXISTS pet_reports_kind_zone_idx ON pet_reports(report_kind, zone);
+CREATE INDEX IF NOT EXISTS shelter_reports_kind_zone_idx ON shelter_reports(report_kind, zone);

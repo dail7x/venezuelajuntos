@@ -1,11 +1,18 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export function Header() {
   return (
     <header className="site-header">
       <Link className="brand" href="/">
-        <span className="brand-mark">VJ</span>
-        <span>venezuelajuntos.online</span>
+        <Image
+          src="/logo-horizontal-web.png"
+          alt="Venezuela Juntos Logo"
+          width={173}
+          height={38}
+          className="brand-logo"
+          priority
+        />
       </Link>
       <nav aria-label="Principal">
         <Link href="/mapa">Mapa</Link>

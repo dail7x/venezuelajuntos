@@ -1,7 +1,7 @@
 export type Field = {
   name: string;
   label: string;
-  type?: "text" | "number" | "datetime-local" | "tel" | "email" | "textarea" | "select" | "checkbox";
+  type?: "text" | "number" | "datetime-local" | "tel" | "email" | "textarea" | "select" | "checkbox" | "file";
   required?: boolean;
   placeholder?: string;
   options?: { label: string; value: string }[];
@@ -19,6 +19,68 @@ export const missingFields: Field[] = [
   { name: "authorName", label: "Nombre del reportante", required: true, placeholder: "Tu nombre" },
   { name: "authorRelation", label: "Relacion con la persona", placeholder: "Familiar, amigo, vecino..." },
   { name: "authorContact", label: "Telefono/WhatsApp del reportante", type: "tel", required: true, placeholder: "+58..." },
+];
+
+export const petLostFields: Field[] = [
+  { name: "petName", label: "Nombre de la mascota", placeholder: "Opcional" },
+  { name: "petType", label: "Tipo de mascota", type: "select", required: true, options: [
+    { label: "Perro", value: "perro" },
+    { label: "Gato", value: "gato" },
+    { label: "Ave", value: "ave" },
+    { label: "Otra", value: "otra" },
+  ] },
+  { name: "zone", label: "Zona donde se perdio", required: true, placeholder: "Municipio, barrio o referencia" },
+  { name: "status", label: "Estado conocido", placeholder: "Asustada, herida, con collar..." },
+  { name: "description", label: "Descripcion", type: "textarea", required: true, placeholder: "Color, tamano, senas, collar, comportamiento..." },
+  { name: "contactName", label: "Nombre de contacto", required: true },
+  { name: "contactPhone", label: "Telefono/WhatsApp", type: "tel", required: true },
+  { name: "canFoster", label: "Me ofrezco para tenerla en transito si aparece", type: "checkbox" },
+];
+
+export const petFoundFields: Field[] = [
+  { name: "petName", label: "Nombre si se conoce", placeholder: "Opcional" },
+  { name: "petType", label: "Tipo de mascota", type: "select", required: true, options: [
+    { label: "Perro", value: "perro" },
+    { label: "Gato", value: "gato" },
+    { label: "Ave", value: "ave" },
+    { label: "Otra", value: "otra" },
+  ] },
+  { name: "zone", label: "Ubicacion actual", required: true, placeholder: "Zona, refugio temporal o punto de encuentro" },
+  { name: "status", label: "Estado en que se encuentra", required: true, placeholder: "Bien, herida, desorientada..." },
+  { name: "description", label: "Descripcion", type: "textarea", required: true },
+  { name: "contactName", label: "Nombre de contacto", required: true },
+  { name: "contactPhone", label: "Telefono/WhatsApp", type: "tel", required: true },
+  { name: "canFoster", label: "Puedo tenerla en transito temporalmente", type: "checkbox" },
+];
+
+export const shelterRequestFields: Field[] = [
+  { name: "requesterName", label: "Nombre del solicitante", required: true },
+  { name: "contactPhone", label: "Telefono/WhatsApp", type: "tel", required: true },
+  { name: "zone", label: "Zona donde se encuentran", required: true, placeholder: "Municipio, barrio o referencia" },
+  { name: "groupType", label: "Tipo de solicitante", type: "select", required: true, options: [
+    { label: "Individuo", value: "individual" },
+    { label: "Grupo familiar", value: "family" },
+    { label: "Grupo comunitario", value: "group" },
+  ] },
+  { name: "groupSize", label: "Cantidad de personas", type: "number", required: true, placeholder: "1" },
+  { name: "needs", label: "Necesidades especiales", type: "textarea", placeholder: "Ninos, adultos mayores, discapacidad, mascotas, medicamentos..." },
+  { name: "description", label: "Situacion", type: "textarea", required: true, placeholder: "Que paso y que tipo de refugio necesitan" },
+];
+
+export const shelterOfferFields: Field[] = [
+  { name: "shelterName", label: "Nombre del lugar u organizacion", required: true },
+  { name: "shelterType", label: "Tipo de refugio", type: "select", required: true, options: [
+    { label: "Casa", value: "casa" },
+    { label: "Cancha deportiva", value: "cancha" },
+    { label: "Iglesia", value: "iglesia" },
+    { label: "Galpon", value: "galpon" },
+    { label: "Otro", value: "otro" },
+  ] },
+  { name: "zone", label: "Zona", required: true },
+  { name: "capacity", label: "Capacidad aproximada", type: "number", required: true },
+  { name: "contactName", label: "Contacto responsable", required: true },
+  { name: "contactPhone", label: "Telefono/WhatsApp", type: "tel", required: true },
+  { name: "description", label: "Condiciones y recursos disponibles", type: "textarea", required: true, placeholder: "Banos, agua, cocina, colchonetas, acceso, horarios..." },
 ];
 
 export const foundFields: Field[] = [

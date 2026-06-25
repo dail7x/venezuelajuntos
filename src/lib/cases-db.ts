@@ -69,6 +69,7 @@ function mapPerson(row: Row): PublicCase {
     updatedAt: dateIso(row.updated_at),
     lastConfirmedAt: dateIso(row.updated_at),
     description: text(row.physical_desc || row.found_notes || row.clothing_desc, "Reporte pendiente de verificacion."),
+    photoUrl: text(row.photo_url),
     reporterPublic: text(row.author_relation, "Reporte ciudadano"),
     signals: signals(),
     sensitiveHidden: true,
@@ -128,20 +129,80 @@ function mapZone(row: Row): PublicCase {
   };
 }
 
+function mapPet(row: Row): PublicCase {
+  const reportKind = text(row.report_kind, "pet_lost");
+  const type = text(row.pet_type, "mascota");
+  const name = text(row.pet_name, type);
+  const zone = text(row.zone, "Zona por confirmar");
+
+  return {
+    id: text(row.id),
+    slug: normalizeSlug(`${reportKind}-${name}-${zone}`),
+    kind: reportKind === "pet_found" ? "pet_found" : "pet_lost",
+    title: reportKind === "pet_found" ? `${name} recuperada` : `${name} perdida`,
+    urgency: reportKind === "pet_found" ? "medium" : "high",
+    status: reportKind === "pet_found" ? "located" : "reported",
+    zone,
+    publicAddress: zone,
+    lat: 10.4806,
+    lng: -66.9036,
+    createdAt: dateIso(row.created_at),
+    updatedAt: dateIso(row.updated_at),
+    lastConfirmedAt: dateIso(row.updated_at),
+    description: text(row.description, "Reporte de mascota pendiente de verificacion."),
+    photoUrl: text(row.photo_url),
+    reporterPublic: "Contacto protegido",
+    signals: signals(),
+    sensitiveHidden: true,
+    needs: [text(row.status, "verificacion"), row.can_foster ? "Transito disponible" : "Buscar transito"],
+  };
+}
+
+function mapShelter(row: Row): PublicCase {
+  const reportKind = text(row.report_kind, "shelter_request");
+  const title = text(row.title, reportKind === "shelter_offer" ? "Refugio disponible" : "Solicitud de refugio");
+  const zone = text(row.zone, "Zona por confirmar");
+
+  return {
+    id: text(row.id),
+    slug: normalizeSlug(`${reportKind}-${title}-${zone}`),
+    kind: reportKind === "shelter_offer" ? "shelter_offer" : "shelter_request",
+    title,
+    urgency: reportKind === "shelter_request" ? "high" : "medium",
+    status: "reported",
+    zone,
+    publicAddress: zone,
+    lat: 10.4806,
+    lng: -66.9036,
+    createdAt: dateIso(row.created_at),
+    updatedAt: dateIso(row.updated_at),
+    lastConfirmedAt: dateIso(row.updated_at),
+    description: text(row.description, "Reporte de refugio pendiente de verificacion."),
+    reporterPublic: "Contacto protegido",
+    signals: signals(),
+    sensitiveHidden: true,
+    needs: [text(row.needs || row.shelter_type, "coordinacion"), "Match por zona"],
+  };
+}
+
 export async function getPublicCasesFromDb() {
   if (!hasDatabaseEnv()) return seedCases;
 
   const db = getDb();
-  const [persons, requests, zones] = await Promise.all([
+  const [persons, requests, zones, pets, shelters] = await Promise.all([
     db.execute("SELECT * FROM persons WHERE is_deleted = 0 ORDER BY updated_at DESC LIMIT 200"),
     db.execute("SELECT * FROM help_requests WHERE is_deleted = 0 ORDER BY updated_at DESC LIMIT 200"),
     db.execute("SELECT * FROM rescue_zones WHERE is_deleted = 0 ORDER BY updated_at DESC LIMIT 200"),
+    db.execute("SELECT * FROM pet_reports WHERE is_deleted = 0 ORDER BY updated_at DESC LIMIT 200"),
+    db.execute("SELECT * FROM shelter_reports WHERE is_deleted = 0 ORDER BY updated_at DESC LIMIT 200"),
   ]);
 
   return [
     ...persons.rows.map((row) => mapPerson(row as Row)),
     ...requests.rows.map((row) => mapRequest(row as Row)),
     ...zones.rows.map((row) => mapZone(row as Row)),
+    ...pets.rows.map((row) => mapPet(row as Row)),
+    ...shelters.rows.map((row) => mapShelter(row as Row)),
   ].sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
 }
 
@@ -159,9 +220,9 @@ export async function createCaseInDb(kind: string, payload: Record<string, unkno
     await db.execute({
       sql: `INSERT INTO persons (
         id, pfif_person_id, source, created_at, updated_at, author_name, author_contact, author_relation,
-        full_name, alternate_names, sex, age_estimated, physical_desc, clothing_desc,
+        full_name, alternate_names, sex, age_estimated, physical_desc, clothing_desc, photo_url,
         last_seen_address, last_seen_at, status, found_address, found_notes
-      ) VALUES (?, ?, 'web_form', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, 'web_form', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [
         id,
         `venezuelajuntos.online/person/${id}`,
@@ -176,11 +237,58 @@ export async function createCaseInDb(kind: string, payload: Record<string, unkno
         payload.age ? Number(payload.age) : null,
         description,
         text(payload.clothingDesc),
+        text(payload.photoDataUrl),
         address,
         payload.lastSeenAt ? Date.parse(String(payload.lastSeenAt)) : null,
         isFound ? "located" : "missing",
         isFound ? address : null,
         isFound ? text(payload.observations) : null,
+      ],
+    });
+  } else if (kind === "pet_lost" || kind === "pet_found") {
+    await db.execute({
+      sql: `INSERT INTO pet_reports (
+        id, created_at, updated_at, report_kind, pet_name, pet_type, status, description, zone,
+        contact_name, contact_phone, can_foster, photo_url
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [
+        id,
+        now,
+        now,
+        kind,
+        text(payload.petName),
+        text(payload.petType, "mascota"),
+        text(payload.status),
+        text(payload.description, "Sin descripcion adicional."),
+        text(payload.zone, "Zona por confirmar"),
+        text(payload.contactName),
+        text(payload.contactPhone),
+        payload.canFoster ? 1 : 0,
+        text(payload.photoDataUrl),
+      ],
+    });
+  } else if (kind === "shelter_request" || kind === "shelter_offer") {
+    const isOffer = kind === "shelter_offer";
+    const title = isOffer ? text(payload.shelterName, "Refugio disponible") : `${text(payload.groupType, "Grupo")} solicita refugio`;
+    await db.execute({
+      sql: `INSERT INTO shelter_reports (
+        id, created_at, updated_at, report_kind, title, shelter_type, zone, contact_name, contact_phone,
+        capacity, group_size, needs, description
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [
+        id,
+        now,
+        now,
+        kind,
+        title,
+        text(payload.shelterType),
+        text(payload.zone, "Zona por confirmar"),
+        text(payload.contactName || payload.requesterName),
+        text(payload.contactPhone),
+        payload.capacity ? Number(payload.capacity) : null,
+        payload.groupSize ? Number(payload.groupSize) : null,
+        text(payload.needs),
+        text(payload.description, "Sin descripcion adicional."),
       ],
     });
   } else if (kind === "help") {
