@@ -1,14 +1,28 @@
 import { NextResponse } from "next/server";
+import { createCaseInDb, getPublicCasesFromDb } from "@/lib/cases-db";
 import { normalizeSlug, seedCases } from "@/lib/data";
 
 export async function GET() {
-  return NextResponse.json({ data: seedCases });
+  try {
+    const data = await getPublicCasesFromDb();
+    return NextResponse.json({ data, source: "db" });
+  } catch (error) {
+    console.error("cases_get_failed", error);
+    return NextResponse.json({ data: seedCases, source: "seed", error: "db_unavailable" });
+  }
 }
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   if (!body?.kind || !body?.payload) {
     return NextResponse.json({ error: "invalid_payload" }, { status: 400 });
+  }
+
+  try {
+    const result = await createCaseInDb(body.kind, body.payload);
+    return NextResponse.json({ ...result, duplicateCandidates: [] }, { status: 201 });
+  } catch (error) {
+    console.error("cases_post_failed", error);
   }
 
   const title =

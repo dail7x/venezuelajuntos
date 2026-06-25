@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import type { FormEvent } from "react";
 import type { Field } from "@/lib/forms";
@@ -41,7 +42,7 @@ export function ReportForm({
           <h1>{title}</h1>
           <p>{subtitle}</p>
         </div>
-        <a href="/" aria-label="Cerrar">x</a>
+        <Link href="/" aria-label="Cerrar">x</Link>
       </div>
 
       <section className="upload-box" aria-label="Carga de foto">
@@ -83,7 +84,7 @@ export function ReportForm({
       </div>
 
       <footer className="form-actions">
-        <a className="secondary-button" href="/">Cancelar</a>
+        <Link className="secondary-button" href="/">Cancelar</Link>
         <button disabled={state === "saving"}>{state === "saving" ? "Guardando..." : submitLabel} →</button>
       </footer>
       {state === "saved" ? <p className="success">Reporte recibido. Queda pendiente de verificacion y posible deduplicacion.</p> : null}

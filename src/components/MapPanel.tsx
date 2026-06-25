@@ -1,11 +1,12 @@
-import Link from "next/link";
-import { kindLabels, seedCases, type PublicCase } from "@/lib/data";
+"use client";
 
-function pointStyle(item: PublicCase) {
-  const left = `${Math.max(8, Math.min(88, (item.lng + 67.2) * 180))}%`;
-  const top = `${Math.max(12, Math.min(82, (10.66 - item.lat) * 420))}%`;
-  return { left, top };
-}
+import dynamic from "next/dynamic";
+import { seedCases, type PublicCase } from "@/lib/data";
+
+const LeafletCaseMap = dynamic(() => import("@/components/LeafletCaseMap"), {
+  ssr: false,
+  loading: () => <div className="map-loading">Cargando mapa...</div>,
+});
 
 export function MapPanel({ cases = seedCases, compact = false }: { cases?: PublicCase[]; compact?: boolean }) {
   return (
@@ -17,19 +18,9 @@ export function MapPanel({ cases = seedCases, compact = false }: { cases?: Publi
         </div>
         <button type="button">Usar mi ubicacion</button>
       </div>
-      <div className="map-canvas" role="img" aria-label="Mapa aproximado de casos reportados">
-        <div className="map-grid" />
-        {cases.map((item) => (
-          <Link
-            key={item.id}
-            href={`/casos/${item.slug}`}
-            className={`map-dot ${item.kind} ${item.urgency}`}
-            style={pointStyle(item)}
-            title={`${kindLabels[item.kind]}: ${item.title}`}
-          >
-            <span>{item.signals.confirmed}</span>
-          </Link>
-        ))}
+      <div className="map-canvas" aria-label="Mapa aproximado de casos reportados">
+        <LeafletCaseMap cases={cases} compact={compact} />
+        {!cases.length ? <div className="map-empty">No hay casos para mostrar con esos filtros.</div> : null}
       </div>
     </div>
   );
