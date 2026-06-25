@@ -234,7 +234,7 @@ export async function getPublicCasesFromDb(page = 1, limit = 100, query = "", zo
              title as title_or_name,
              zone as zone_or_address,
              description as search_desc,
-             status
+             'reported' as status
       FROM shelter_reports WHERE is_deleted = 0
     ) unified
     WHERE 1=1
@@ -315,7 +315,7 @@ export async function getGlobalStatsFromDb() {
       ) + (
         SELECT count(*) FROM pet_reports WHERE is_deleted=0 AND status NOT IN ('located', 'reunified', 'duplicate', 'false_alarm')
       ) + (
-        SELECT count(*) FROM shelter_reports WHERE is_deleted=0 AND status NOT IN ('resolved', 'closed', 'duplicate', 'false_alarm')
+        SELECT count(*) FROM shelter_reports WHERE is_deleted=0 AND 'reported' NOT IN ('resolved', 'closed', 'duplicate', 'false_alarm')
       ) AS open,
       
       (
@@ -331,7 +331,7 @@ export async function getGlobalStatsFromDb() {
       ) + (
         SELECT count(*) FROM pet_reports WHERE is_deleted=0 AND status IN ('located', 'reunified')
       ) + (
-        SELECT count(*) FROM shelter_reports WHERE is_deleted=0 AND status IN ('resolved', 'closed')
+        SELECT count(*) FROM shelter_reports WHERE is_deleted=0 AND 'reported' IN ('resolved', 'closed')
       ) AS resolved
   `;
   
