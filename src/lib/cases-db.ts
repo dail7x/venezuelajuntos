@@ -313,31 +313,15 @@ export async function getGlobalStatsFromDb() {
   const sql = `
     SELECT 
       (
-        SELECT count(*) FROM persons WHERE is_deleted=0 AND status NOT IN ('located', 'reunified', 'duplicate', 'false_alarm')
-      ) + (
-        SELECT count(*) FROM help_requests WHERE is_deleted=0 AND status NOT IN ('resolved', 'closed', 'duplicate', 'false_alarm')
-      ) + (
-        SELECT count(*) FROM rescue_zones WHERE is_deleted=0 AND status NOT IN ('resolved', 'closed', 'duplicate', 'false_alarm')
-      ) + (
-        SELECT count(*) FROM pet_reports WHERE is_deleted=0 AND status NOT IN ('located', 'reunified', 'duplicate', 'false_alarm')
-      ) + (
-        SELECT count(*) FROM shelter_reports WHERE is_deleted=0 AND 'reported' NOT IN ('resolved', 'closed', 'duplicate', 'false_alarm')
+        SELECT count(*) FROM persons WHERE is_deleted=0 AND status NOT IN ('duplicate', 'false_alarm')
       ) AS open,
       
       (
-        SELECT count(*) FROM persons WHERE is_deleted=0 AND status = 'missing'
+        SELECT count(*) FROM persons WHERE is_deleted=0 AND status NOT IN ('located', 'reunified', 'duplicate', 'false_alarm')
       ) AS missing,
       
       (
         SELECT count(*) FROM persons WHERE is_deleted=0 AND status IN ('located', 'reunified')
-      ) + (
-        SELECT count(*) FROM help_requests WHERE is_deleted=0 AND status IN ('resolved', 'closed')
-      ) + (
-        SELECT count(*) FROM rescue_zones WHERE is_deleted=0 AND status IN ('resolved', 'closed')
-      ) + (
-        SELECT count(*) FROM pet_reports WHERE is_deleted=0 AND status IN ('located', 'reunified')
-      ) + (
-        SELECT count(*) FROM shelter_reports WHERE is_deleted=0 AND 'reported' IN ('resolved', 'closed')
       ) AS resolved,
 
       (

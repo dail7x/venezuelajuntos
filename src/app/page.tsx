@@ -43,6 +43,7 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
   const [activeModal] = useState<string | null>(defaultModal);
   const [globalStats, setGlobalStats] = useState({ open: 0, missing: 0, resolved: 0, duplicates: 0 });
   const [statusFilter, setStatusFilter] = useState("");
+  const [viewTab, setViewTab] = useState<"personas" | "ayuda">("personas");
 
   useEffect(() => {
     fetch("/api/stats")
@@ -105,7 +106,7 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
       .catch(() => {});
   }, [selectedPerson, page, debouncedNameQuery, debouncedZoneQuery, statusFilter]);
 
-  const peopleCases = cases.filter((item) => item.kind === "missing" || item.kind === "found");
+  const displayCases = cases.filter((item) => viewTab === "personas" ? (item.kind === "missing" || item.kind === "found") : item.kind === "help");
   const hasSearch = Boolean(nameQuery.trim() || zoneQuery.trim() || statusFilter);
   const totalPages = Math.ceil(totalItems / pageSize) || 1;
 
@@ -197,6 +198,21 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
         </section>
 
         <section className="cta-grid" aria-label="Acciones principales">
+          <button 
+            className="cta search-cta" 
+            style={{ backgroundColor: "#3b82f6" }} 
+            onClick={() => {
+              const el = document.getElementById("search-input");
+              if (el) {
+                el.scrollIntoView({ behavior: "smooth", block: "center" });
+                el.focus();
+              }
+            }} 
+            type="button"
+          >
+            <Search aria-hidden="true" />
+            <span>Buscar persona desaparecida</span>
+          </button>
           <Link className="cta missing" href="/reportar/desaparecido">
             <UserRoundX aria-hidden="true" />
             <span>Reportar persona desaparecida</span>
@@ -213,21 +229,6 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
             <HandHeart aria-hidden="true" />
             <span>Quiero Ayudar (voluntario)</span>
           </Link>
-          <button 
-            className="cta" 
-            style={{ backgroundColor: "#3b82f6" }} 
-            onClick={() => {
-              const el = document.getElementById("search-input");
-              if (el) {
-                el.scrollIntoView({ behavior: "smooth", block: "center" });
-                el.focus();
-              }
-            }} 
-            type="button"
-          >
-            <Search aria-hidden="true" />
-            <span>Buscar persona desaparecida</span>
-          </button>
         </section>
 
         <section className="secondary-cta-grid" aria-label="Mascotas y refugios">
@@ -329,7 +330,7 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
             />
           </label>
           <label>
-            Buscar por zona
+            Buscar por zona, edificio, calle, urbanización
             <input
               list="home-venezuela-zones"
               value={zoneQuery}
@@ -357,14 +358,95 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
         </section> */}
 
         <section className="people-section">
-          <div className="section-heading">
-            <p className="eyebrow">Personas reportadas</p>
-            <h2>{hasSearch ? "Resultados de busqueda" : "Todas las personas reportadas"}</h2>
+          <div className="section-heading" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <div>
+              <p className="eyebrow">{viewTab === "personas" ? "Personas reportadas" : "Solicitudes urgentes"}</p>
+              <h2>{hasSearch ? "Resultados de búsqueda" : viewTab === "personas" ? "Todas las personas reportadas" : "Peticiones de ayuda ciudadana"}</h2>
+            </div>
+            
+            <div style={{ display: "flex", gap: "0.5rem", background: "#f1f5f9", padding: "4px", borderRadius: "8px", alignSelf: "flex-start" }}>
+              <button
+                onClick={() => { setViewTab("personas"); setPage(1); }}
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: "6px",
+                  border: "none",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                  background: viewTab === "personas" ? "white" : "transparent",
+                  color: viewTab === "personas" ? "var(--ink)" : "var(--ink-soft)",
+                  boxShadow: viewTab === "personas" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                }}
+              >
+                Personas desaparecidas
+              </button>
+              <button
+                onClick={() => { setViewTab("ayuda"); setPage(1); }}
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: "6px",
+                  border: "none",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                  background: viewTab === "ayuda" ? "white" : "transparent",
+                  color: viewTab === "ayuda" ? "var(--ink)" : "var(--ink-soft)",
+                  boxShadow: viewTab === "ayuda" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                }}
+              >
+                Peticiones de ayuda
+              </button>
+            </div>
           </div>
-          {peopleCases.length ? (
+          
+          {viewTab === "personas" && (
+            <div style={{ marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
+              <span style={{ fontSize: "0.9rem", color: "var(--ink-soft)", fontWeight: 500 }}>Filtros:</span>
+              <button
+                onClick={() => { setStatusFilter(statusFilter === "missing" ? "" : "missing"); setPage(1); }}
+                style={{
+                  padding: "4px 12px",
+                  borderRadius: "999px",
+                  border: `1px solid ${statusFilter === "missing" ? "#ea580c" : "#fed7aa"}`,
+                  background: statusFilter === "missing" ? "#ffedd5" : "white",
+                  color: statusFilter === "missing" ? "#9a3412" : "#ea580c",
+                  fontSize: "0.85rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.25rem"
+                }}
+              >
+                Aún buscados
+              </button>
+              <button
+                onClick={() => { setStatusFilter(statusFilter === "resolved" ? "" : "resolved"); setPage(1); }}
+                style={{
+                  padding: "4px 12px",
+                  borderRadius: "999px",
+                  border: `1px solid ${statusFilter === "resolved" ? "#16a34a" : "#bbf7d0"}`,
+                  background: statusFilter === "resolved" ? "#dcfce7" : "white",
+                  color: statusFilter === "resolved" ? "#166534" : "#16a34a",
+                  fontSize: "0.85rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.25rem"
+                }}
+              >
+                Localizados a salvo
+              </button>
+              <span style={{ fontSize: "0.85rem", color: "var(--ink-muted)", fontStyle: "italic", marginLeft: "0.5rem" }}>
+                (Pronto añadiremos por zona o edificio)
+              </span>
+            </div>
+          )}
+
+          {displayCases.length ? (
             <>
               <div className="people-grid">
-                {peopleCases.map((item) => <CaseCard key={item.id} item={item} onOpen={setSelectedPerson} />)}
+                {displayCases.map((item) => <CaseCard key={item.id} item={item} onOpen={setSelectedPerson} />)}
               </div>
               
               <div className="pagination-controls" style={{ display: 'flex', gap: '1rem', justifyContent: 'center', alignItems: 'center', marginTop: '2rem' }}>

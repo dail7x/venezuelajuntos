@@ -43,6 +43,9 @@ export function ReportForm({
   const [photoDataUrl, setPhotoDataUrl] = useState("");
   const [photoName, setPhotoName] = useState("");
   const zoneListId = `${kind}-venezuela-zones`;
+  
+  const [gpsLocation, setGpsLocation] = useState<{lat: number; lng: number} | null>(null);
+  const [gpsStatus, setGpsStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
   const [wasAccompanied, setWasAccompanied] = useState(false);
 
@@ -54,6 +57,10 @@ export function ReportForm({
     const form = new FormData(formEl);
     const payload = Object.fromEntries(form.entries());
     if (photoDataUrl) payload.photoDataUrl = photoDataUrl;
+    if (gpsLocation) {
+      payload.lat = gpsLocation.lat.toString();
+      payload.lng = gpsLocation.lng.toString();
+    }
     const response = await fetch("/api/cases", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -106,6 +113,21 @@ export function ReportForm({
     setPhotoDataUrl(await compressImage(file));
   }
 
+  function requestGPS() {
+    if (!navigator.geolocation) {
+      setGpsStatus("error");
+      return;
+    }
+    setGpsStatus("loading");
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setGpsLocation({ lat: position.coords.latitude, lng: position.coords.longitude });
+        setGpsStatus("success");
+      },
+      () => setGpsStatus("error")
+    );
+  }
+
   return (
     <form className="report-shell" onSubmit={onSubmit}>
       <div className="form-heading">
@@ -143,6 +165,37 @@ export function ReportForm({
             </div>
           ) : null}
         </>
+      )}
+
+      {kind === "help" && (
+        <div style={{ background: "#fef2f2", border: "1px solid #fecaca", padding: "12px 16px", borderRadius: "8px", marginBottom: "1.5rem" }}>
+          <p style={{ margin: "0 0 10px 0", fontSize: "0.9rem", color: "#991b1b", lineHeight: 1.5 }}>
+            <strong>Ubicación exacta vital</strong> 
+            <br/>Para que los equipos de rescate o voluntarios puedan llegar rápido, necesitamos las coordenadas exactas. Por favor, usa tu ubicación GPS actual.
+          </p>
+          <button 
+            type="button" 
+            onClick={requestGPS}
+            disabled={gpsStatus === "loading" || gpsStatus === "success"}
+            style={{ 
+              background: gpsStatus === "success" ? "#dcfce7" : "#ef4444", 
+              color: gpsStatus === "success" ? "#166534" : "white",
+              border: "none",
+              padding: "8px 16px",
+              borderRadius: "4px",
+              fontWeight: "bold",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px"
+            }}
+          >
+            {gpsStatus === "idle" && "📍 Usar mi ubicación actual"}
+            {gpsStatus === "loading" && "Obteniendo ubicación..."}
+            {gpsStatus === "success" && "✅ Ubicación obtenida"}
+            {gpsStatus === "error" && "⚠️ Error al obtener. Intenta de nuevo"}
+          </button>
+        </div>
       )}
 
       <div className="form-grid">

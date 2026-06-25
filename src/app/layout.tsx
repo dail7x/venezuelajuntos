@@ -4,11 +4,11 @@ import { Footer } from "@/components/Footer";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://venezuelajuntos.com"),
+  metadataBase: new URL("https://venezuelajuntos.online"),
   title: "Venezuela Juntos | Emergencia",
   description: "Plataforma ciudadana para reportar desaparecidos, encontrados y solicitudes de ayuda.",
   openGraph: {
-    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+    images: [{ url: "/og-image.jpg", width: 1200, height: 630 }],
   },
 };
 

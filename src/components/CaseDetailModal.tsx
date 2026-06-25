@@ -157,10 +157,10 @@ export function CaseDetailModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           caseId: item.id,
-          status: "located",
+          status: "located", // Using "located" / "resolved" equivalent
           authorName: statusFormName,
           authorContact: statusFormContact,
-          text: `Reportó que ya apareció. ${statusFormText}`,
+          text: item.kind === "help" ? `Marcó como atendida. ${statusFormText}` : `Reportó que ya apareció. ${statusFormText}`,
         }),
       });
 
@@ -190,10 +190,10 @@ export function CaseDetailModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           caseId: item.id,
-          status: "missing",
+          status: "missing", // Using "missing" / "reported" equivalent
           authorName: statusFormName,
           authorContact: statusFormContact,
-          text: `Volvió a marcar como desaparecido. Razón: ${statusFormText}`,
+          text: item.kind === "help" ? `Volvió a marcar como pendiente. Razón: ${statusFormText}` : `Volvió a marcar como desaparecido. Razón: ${statusFormText}`,
         }),
       });
 
@@ -244,9 +244,11 @@ export function CaseDetailModal({
         <button aria-label="Cerrar ficha" className="modal-close" onClick={onClose} type="button">x</button>
         
         <div className="case-modal-media">
-          {showStatusPill && (
-            <span className={`photo-pill ${item.status === 'located' || item.status === 'reunified' ? 'located' : 'missing'}`}>
-              {item.status === 'located' || item.status === 'reunified' ? 'Ya apareció' : 'Desaparecido'}
+          {(showStatusPill || item.kind === "help") && (
+            <span className={`photo-pill ${item.status === 'located' || item.status === 'reunified' || item.status === 'resolved' ? 'located' : 'missing'}`}>
+              {item.kind === "help" 
+                ? (item.status === 'located' || item.status === 'reunified' || item.status === 'resolved' ? 'Atendida' : 'Pendiente')
+                : (item.status === 'located' || item.status === 'reunified' ? 'Ya apareció' : 'Desaparecido')}
             </span>
           )}
           {item.photoUrl ? (
@@ -402,32 +404,43 @@ export function CaseDetailModal({
                 <div><dt>Ultima actualizacion</dt><dd>{new Date(item.updatedAt).toLocaleString("es-VE", { dateStyle: "medium", timeStyle: "short" })}</dd></div>
               </dl>
               
-              {isPerson && (
-                <div className="case-modal-actions">
-                  {item.status === "missing" && !showLocatedForm && (
-                    <button className="primary-button" onClick={() => setShowLocatedForm(true)}>
-                      ✅ Reportar que Ya Apareció
-                    </button>
-                  )}
+              {(isPerson || item.kind === "help") && (item.status === 'missing' || item.status === 'reported') && (
+                <div className="report-action-card">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <h3 style={{ margin: "0 0 4px 0", color: "#166534" }}>{item.kind === "help" ? "¿Ya fue atendida esta petición?" : "¿Ya apareció?"}</h3>
+                      <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--ink-soft)" }}>
+                        {item.kind === "help" ? "Si ya se resolvió esta petición de ayuda, repórtalo para actualizar el estado." : "Si tienes información confirmada de que esta persona ya fue localizada, repórtalo para actualizar el estado."}
+                      </p>
+                    </div>
+                    {!showLocatedForm && (
+                      <button className="primary-button" style={{ background: "#16a34a", color: "white", padding: "8px 16px", flexShrink: 0 }} onClick={() => setShowLocatedForm(true)}>
+                        {item.kind === "help" ? "Marcar como atendida" : "Reportar aparición"}
+                      </button>
+                    )}
+                  </div>
+                  
                   {showLocatedForm && (
-                    <form className="add-note-form" onSubmit={handleStatusChangeSubmit} style={{ marginTop: 0 }}>
-                      <h4>Datos de quien reporta que apareció</h4>
-                      <input
-                        type="text"
-                        placeholder="Nombre de quien reporta"
-                        required
-                        value={statusFormName}
-                        onChange={(e) => setStatusFormName(e.target.value)}
-                      />
-                      <input
-                        type="text"
-                        placeholder="Parentesco o relación"
-                        required
-                        value={statusFormContact}
-                        onChange={(e) => setStatusFormContact(e.target.value)}
-                      />
+                    <form className="add-note-form" onSubmit={handleStatusChangeSubmit} style={{ marginTop: "1rem" }}>
+                      <h4>Datos de quien reporta la aparición</h4>
+                      <div className="note-form-grid" style={{ marginBottom: "1rem" }}>
+                        <input
+                          type="text"
+                          placeholder="Tu nombre"
+                          required
+                          value={statusFormName}
+                          onChange={(e) => setStatusFormName(e.target.value)}
+                        />
+                        <input
+                          type="text"
+                          placeholder="Teléfono (para verificación del equipo)"
+                          required
+                          value={statusFormContact}
+                          onChange={(e) => setStatusFormContact(e.target.value)}
+                        />
+                      </div>
                       <textarea
-                        placeholder="¿Dónde apareció y en qué estado se encuentra?"
+                        placeholder="Da detalles de dónde y cómo se encontró (solo info confirmada)"
                         rows={3}
                         required
                         value={statusFormText}
@@ -436,38 +449,7 @@ export function CaseDetailModal({
                       <div className="form-actions" style={{ flexDirection: 'row', gap: '8px', display: 'flex' }}>
                         <button className="secondary-button" type="button" onClick={() => setShowLocatedForm(false)}>Cancelar</button>
                         <button type="submit" disabled={isSavingStatus}>
-                          {isSavingStatus ? "Guardando..." : "Confirmar aparición"}
-                        </button>
-                      </div>
-                    </form>
-                  )}
-
-                  {(item.status === "located" || item.status === "reunified") && !showRevertForm && (
-                    <button className="secondary-button" onClick={() => setShowRevertForm(true)}>
-                      ⚠️ Volver a marcar como desaparecido
-                    </button>
-                  )}
-                  {showRevertForm && (
-                    <form className="add-note-form" onSubmit={handleRevertStatusSubmit} style={{ marginTop: 0 }}>
-                      <h4>Razón para volver a marcar como desaparecido</h4>
-                      <input
-                        type="text"
-                        placeholder="Tu nombre"
-                        required
-                        value={statusFormName}
-                        onChange={(e) => setStatusFormName(e.target.value)}
-                      />
-                      <textarea
-                        placeholder="Explica la razón detalladamente (ej. Fue una falsa alarma, no era la persona, etc.)"
-                        rows={3}
-                        required
-                        value={statusFormText}
-                        onChange={(e) => setStatusFormText(e.target.value)}
-                      />
-                      <div className="form-actions" style={{ flexDirection: 'row', gap: '8px', display: 'flex' }}>
-                        <button className="secondary-button" type="button" onClick={() => setShowRevertForm(false)}>Cancelar</button>
-                        <button type="submit" disabled={isSavingStatus}>
-                          {isSavingStatus ? "Guardando..." : "Volver a marcar desaparecido"}
+                          {isSavingStatus ? "Guardando..." : "Confirmar reporte"}
                         </button>
                       </div>
                     </form>
@@ -475,7 +457,52 @@ export function CaseDetailModal({
                 </div>
               )}
 
-              {isPerson && (
+              {(isPerson || item.kind === "help") && (item.status === 'located' || item.status === 'reunified' || item.status === 'resolved') && (
+                <div className="report-action-card" style={{ background: '#fef2f2', borderColor: '#fecaca' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <h3 style={{ margin: "0 0 4px 0", color: "#991b1b" }}>{item.kind === "help" ? "¿Aún no está atendida?" : "¿Hubo un error?"}</h3>
+                      <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--ink-soft)" }}>
+                        {item.kind === "help" ? "Si esta petición sigue pendiente, puedes revertir el estado." : "Si esta persona sigue desaparecida, puedes volver a cambiar el estado."}
+                      </p>
+                    </div>
+                    {!showRevertForm && (
+                      <button className="primary-button" style={{ background: "#ef4444", color: "white", padding: "8px 16px", flexShrink: 0 }} onClick={() => setShowRevertForm(true)}>
+                        {item.kind === "help" ? "Marcar como pendiente" : "Marcar desaparecido"}
+                      </button>
+                    )}
+                  </div>
+                  
+                  {showRevertForm && (
+                    <form className="add-note-form" onSubmit={handleRevertStatusSubmit} style={{ marginTop: "1rem" }}>
+                      <h4>Razón para revertir el estado</h4>
+                      <input
+                        type="text"
+                        placeholder="Tu nombre"
+                        required
+                        value={statusFormName}
+                        onChange={(e) => setStatusFormName(e.target.value)}
+                        style={{ marginBottom: "0.5rem" }}
+                      />
+                      <textarea
+                        placeholder="Explica la razón detalladamente"
+                        rows={3}
+                        required
+                        value={statusFormText}
+                        onChange={(e) => setStatusFormText(e.target.value)}
+                      />
+                      <div className="form-actions" style={{ flexDirection: 'row', gap: '8px', display: 'flex', marginTop: "0.5rem" }}>
+                        <button className="secondary-button" type="button" onClick={() => setShowRevertForm(false)}>Cancelar</button>
+                        <button type="submit" disabled={isSavingStatus} style={{ background: "#ef4444" }}>
+                          {isSavingStatus ? "Guardando..." : "Confirmar cambio"}
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              )}
+
+              {(isPerson || item.kind === "help") && (
                 <div className="case-updates-section">
                   <hr style={{ margin: "24px 0", borderColor: "var(--line)" }} />
                   <h3>Historial de Actualizaciones</h3>

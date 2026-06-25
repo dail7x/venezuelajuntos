@@ -64,7 +64,7 @@ export const shelterRequestFields: Field[] = [
     { label: "Grupo comunitario", value: "group" },
   ] },
   { name: "groupSize", label: "Cantidad de personas", type: "number", required: true, placeholder: "1" },
-  { name: "needs", label: "Necesidades especiales", type: "textarea", placeholder: "Ninos, adultos mayores, discapacidad, mascotas, medicamentos..." },
+  { name: "needs", label: "Necesidades especiales", type: "textarea", placeholder: "Niños, adultos mayores, discapacidad, mascotas, medicamentos..." },
   { name: "description", label: "Situacion", type: "textarea", required: true, placeholder: "Que paso y que tipo de refugio necesitan" },
 ];
 
@@ -81,7 +81,7 @@ export const shelterOfferFields: Field[] = [
   { name: "capacity", label: "Capacidad aproximada", type: "number", required: true },
   { name: "contactName", label: "Contacto responsable", required: true },
   { name: "contactPhone", label: "Telefono/WhatsApp", type: "tel", required: true },
-  { name: "description", label: "Condiciones y recursos disponibles", type: "textarea", required: true, placeholder: "Banos, agua, cocina, colchonetas, acceso, horarios..." },
+  { name: "description", label: "Condiciones y recursos disponibles", type: "textarea", required: true, placeholder: "Baños, agua, cocina, colchonetas, acceso, horarios..." },
 ];
 
 export const foundFields: Field[] = [
@@ -111,7 +111,7 @@ export const helpFields: Field[] = [
   { name: "risks", label: "Riesgos visibles", placeholder: "Gas, cables, fuego, estructura inestable..." },
   { name: "requesterName", label: "Contacto solicitante", required: true },
   { name: "requesterContact", label: "WhatsApp o telefono", type: "tel", required: true },
-  { name: "hasVulnerable", label: "Hay ninos, adultos mayores o personas con discapacidad", type: "checkbox" },
+  { name: "hasVulnerable", label: "Hay niños, adultos mayores o personas con discapacidad", type: "checkbox" },
 ];
 
 export const volunteerFields: Field[] = [
