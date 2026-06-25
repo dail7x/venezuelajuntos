@@ -6,7 +6,7 @@ import { normalizeSlug, seedCases } from "@/lib/data";
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const page = parseInt(searchParams.get("page") || "1", 10);
-  const limit = parseInt(searchParams.get("limit") || "100", 10);
+  const limit = parseInt(searchParams.get("limit") || "99", 10);
   const query = searchParams.get("query") || "";
   const zone = searchParams.get("zone") || "";
   const status = searchParams.get("status") || "";

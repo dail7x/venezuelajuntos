@@ -35,7 +35,7 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
   
   const [page, setPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const pageSize = 100;
+  const pageSize = 99;
   
   const [dataSource, setDataSource] = useState<"seed" | "db" | "loading">("loading");
   const [selectedPerson, setSelectedPerson] = useState<PublicCase | null>(null);
@@ -341,21 +341,21 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
                 {peopleCases.map((item) => <CaseCard key={item.id} item={item} onOpen={setSelectedPerson} />)}
               </div>
               
-              <div className="pagination-controls" style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '2rem' }}>
+              <div className="pagination-controls" style={{ display: 'flex', gap: '1rem', justifyContent: 'center', alignItems: 'center', marginTop: '2rem' }}>
                 <button 
                   onClick={() => setPage(p => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="cta"
-                  style={{ padding: '0.5rem 1rem', fontSize: '1rem' }}
+                  className="header-button"
+                  style={{ opacity: page === 1 ? 0.5 : 1 }}
                 >
                   Anterior
                 </button>
-                <span style={{ display: 'flex', alignItems: 'center' }}>Página {page} de {totalPages}</span>
+                <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>Página {page} de {totalPages}</span>
                 <button 
                   onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
-                  className="cta"
-                  style={{ padding: '0.5rem 1rem', fontSize: '1rem' }}
+                  className="header-button"
+                  style={{ opacity: page === totalPages ? 0.5 : 1 }}
                 >
                   Siguiente
                 </button>
