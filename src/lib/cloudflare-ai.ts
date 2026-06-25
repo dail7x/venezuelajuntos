@@ -63,3 +63,86 @@ IMPORTANTE: Usa los nombres y lugares de la 'Dirección cruda'. NO uses el texto
     return { location_zone: null, location_normalized: null };
   }
 }
+
+export async function extractNamesFromHospitalList(sourceType: "image" | "tweet", sourceData: string) {
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+  const apiToken = process.env.CLOUDFLARE_API_TOKEN;
+
+  if (!accountId || !apiToken) {
+    throw new Error("Cloudflare AI credentials missing");
+  }
+
+  const prompt = `Eres un asistente que extrae información de listas de pacientes en hospitales.
+De la información provista, extrae todos los nombres de personas y devuelve un JSON.
+El formato debe ser EXACTAMENTE este:
+{
+  "hospital_name": "Nombre del hospital si se menciona, o null",
+  "people": [
+    {
+      "full_name": "Nombre completo",
+      "cedula_identidad": numero_o_null,
+      "age_estimated": numero_o_null,
+      "status": "located" o "deceased"
+    }
+  ]
+}
+Devuelve ÚNICAMENTE el JSON, sin markdown, sin explicaciones.`;
+
+  let messages: any[] = [];
+
+  if (sourceType === "image") {
+    // sourceData is a base64 encoded image
+    // Note: Cloudflare's multimodal API format usually expects base64 inside the message or via bytes array.
+    // Llama 3.2 Vision uses a specific format.
+    messages = [
+      { role: "user", content: prompt },
+      { role: "user", content: "Extrae de la siguiente imagen:" },
+      // The image format depends on the exact CF API, but generally it's passed as an object with `image`
+      { role: "user", content: [{ type: "image_url", image_url: { url: \`data:image/jpeg;base64,\${sourceData}\` } }] }
+    ];
+  } else {
+    // sourceData is text/tweet
+    messages = [
+      { role: "user", content: prompt + "\n\nTexto:\n" + sourceData }
+    ];
+  }
+
+  // Use llama-3.2-11b-vision-instruct for images, 3.1-8b for text
+  const model = sourceType === "image" 
+    ? "@cf/meta/llama-3.2-11b-vision-instruct" 
+    : "@cf/meta/llama-3.1-8b-instruct";
+
+  try {
+    const res = await fetch(
+      \`https://api.cloudflare.com/client/v4/accounts/\${accountId}/ai/run/\${model}\`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": \`Bearer \${apiToken}\`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ messages }),
+      }
+    );
+
+    if (!res.ok) {
+      console.error("Cloudflare AI error:", await res.text());
+      throw new Error("AI extraction failed");
+    }
+
+    const data = await res.json();
+    const responseRaw = data.result?.response;
+    let cleanJson = "";
+    
+    if (typeof responseRaw === 'string') {
+      cleanJson = responseRaw.replace(/\`\`\`json/gi, '').replace(/\`\`\`/g, '').trim();
+    } else if (typeof responseRaw === 'object' && responseRaw !== null) {
+      cleanJson = JSON.stringify(responseRaw);
+    }
+    
+    return JSON.parse(cleanJson);
+  } catch (error) {
+    console.error("Failed to extract names with AI:", error);
+    throw error;
+  }
+}

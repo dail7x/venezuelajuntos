@@ -1,0 +1,11 @@
+Starting forced full sync...
+Fetching page 1...
+[TypeError: fetch failed] {
+  [cause]: Error: getaddrinfo ENOTFOUND api.venezuelajuntos.com
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:121:26) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'api.venezuelajuntos.com'
+  }
+}

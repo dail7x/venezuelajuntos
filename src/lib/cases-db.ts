@@ -206,7 +206,7 @@ function mapShelter(row: Row): PublicCase {
   };
 }
 
-export async function getPublicCasesFromDb(page = 1, limit = 100, query = "", zoneQ = "", status = "") {
+export async function getPublicCasesFromDb(page = 1, limit = 100, query = "", zoneQ = "", status = "", hasUpdates = false) {
   if (!hasDatabaseEnv()) return { items: seedCases, total: seedCases.length };
 
   const db = getDb();
@@ -220,7 +220,7 @@ export async function getPublicCasesFromDb(page = 1, limit = 100, query = "", zo
              COALESCE(physical_desc, found_notes, clothing_desc) as search_desc,
              status,
              potential_duplicate_of
-      FROM persons WHERE is_deleted = 0
+      FROM persons WHERE is_deleted = 0 ${hasUpdates ? "AND EXISTS (SELECT 1 FROM person_notes WHERE person_id = persons.id)" : ""}
       UNION ALL
       SELECT id, 'request' as type, updated_at,
              COALESCE(title, request_type) as title_or_name,
@@ -228,7 +228,7 @@ export async function getPublicCasesFromDb(page = 1, limit = 100, query = "", zo
              description as search_desc,
              status,
              NULL as potential_duplicate_of
-      FROM help_requests WHERE is_deleted = 0
+      FROM help_requests WHERE is_deleted = 0 ${hasUpdates ? "AND 1=0" : ""}
       UNION ALL
       SELECT id, 'zone' as type, updated_at,
              title as title_or_name,
@@ -236,7 +236,7 @@ export async function getPublicCasesFromDb(page = 1, limit = 100, query = "", zo
              description as search_desc,
              status,
              NULL as potential_duplicate_of
-      FROM rescue_zones WHERE is_deleted = 0
+      FROM rescue_zones WHERE is_deleted = 0 ${hasUpdates ? "AND 1=0" : ""}
       UNION ALL
       SELECT id, 'pet' as type, updated_at,
              pet_name as title_or_name,
@@ -244,7 +244,7 @@ export async function getPublicCasesFromDb(page = 1, limit = 100, query = "", zo
              description as search_desc,
              status,
              NULL as potential_duplicate_of
-      FROM pet_reports WHERE is_deleted = 0
+      FROM pet_reports WHERE is_deleted = 0 ${hasUpdates ? "AND 1=0" : ""}
       UNION ALL
       SELECT id, 'shelter' as type, updated_at,
              title as title_or_name,
@@ -252,7 +252,7 @@ export async function getPublicCasesFromDb(page = 1, limit = 100, query = "", zo
              description as search_desc,
              'reported' as status,
              NULL as potential_duplicate_of
-      FROM shelter_reports WHERE is_deleted = 0
+      FROM shelter_reports WHERE is_deleted = 0 ${hasUpdates ? "AND 1=0" : ""}
     ) unified
     WHERE 1=1
   `;

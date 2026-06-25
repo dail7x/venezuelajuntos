@@ -24,6 +24,10 @@ export function Header() {
           <Map aria-hidden="true" />
           <span>Mapa de reportes</span>
         </Link>
+        <Link className="header-button" href="/lista-aparecidos">
+          <HandHeart aria-hidden="true" />
+          <span>Listas de Hospitales</span>
+        </Link>
         <Link className="header-button" href="/ayudar">
           <HandHeart aria-hidden="true" />
           <span>Ofrecer ayuda</span>

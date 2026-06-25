@@ -25,13 +25,48 @@ export async function POST(request: Request) {
   let aiCallsRemaining = 0; // Disabled during sync as per user request to separate concerns
   let aiProcessedCount = 0;
 
+  const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
+
   try {
     while (hasMore) { 
-      const res = await fetch(`https://desaparecidos-terremoto-api.theempire.tech/api/personas?pageSize=${pageSize}&page=${page}`);
+      // Respectful delay between pages to avoid rate-limiting or crashing the target API
+      if (page > 1) {
+        await delay(2000); 
+      }
+
+      let res;
+      let success = false;
+      let retryCount = 0;
       
-      if (!res.ok) {
-        console.error(`Failed to fetch external API page ${page}: ${res.statusText}`);
-        break;
+      while (!success && retryCount < 5) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+
+        try {
+          res = await fetch(
+            `https://desaparecidos-terremoto-api.theempire.tech/api/personas?pageSize=${pageSize}&page=${page}`,
+            { signal: controller.signal }
+          );
+          clearTimeout(timeoutId);
+          
+          if (!res.ok) {
+            console.error(`Failed to fetch external API page ${page}: ${res.statusText}`);
+            retryCount++;
+            await delay(5000); // wait longer before retry
+            continue;
+          }
+          
+          success = true;
+        } catch (err: any) {
+          console.error(`Fetch error on page ${page}:`, err.message);
+          retryCount++;
+          await delay(5000); // Wait 5s before retrying
+        }
+      }
+
+      if (!success || !res) {
+        console.error(`Giving up on page ${page} after 5 retries. Aborting sync to avoid infinite loops.`);
+        break; // Better to break than skip to prevent missing data gaps as user requested
       }
       
       const json = await res.json();

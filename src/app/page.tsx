@@ -43,6 +43,7 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
   const [activeModal] = useState<string | null>(defaultModal);
   const [globalStats, setGlobalStats] = useState({ open: 0, missing: 0, resolved: 0, duplicates: 0 });
   const [statusFilter, setStatusFilter] = useState("");
+  const [hasUpdatesFilter, setHasUpdatesFilter] = useState(false);
   const [viewTab, setViewTab] = useState<"personas" | "ayuda" | "mascotas">("personas");
 
   useEffect(() => {
@@ -60,6 +61,7 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
     if (debouncedNameQuery) url.searchParams.set("query", debouncedNameQuery);
     if (debouncedZoneQuery) url.searchParams.set("zone", debouncedZoneQuery);
     if (statusFilter) url.searchParams.set("status", statusFilter);
+    if (hasUpdatesFilter) url.searchParams.set("hasUpdates", "true");
 
     fetch(url.toString())
       .then((response) => response.json())
@@ -87,6 +89,7 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
     if (debouncedNameQuery) url.searchParams.set("query", debouncedNameQuery);
     if (debouncedZoneQuery) url.searchParams.set("zone", debouncedZoneQuery);
     if (statusFilter) url.searchParams.set("status", statusFilter);
+    if (hasUpdatesFilter) url.searchParams.set("hasUpdates", "true");
 
     fetch(url.toString())
       .then((response) => response.json())
@@ -104,7 +107,7 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
         }
       })
       .catch(() => {});
-  }, [selectedPerson, page, debouncedNameQuery, debouncedZoneQuery, statusFilter]);
+  }, [selectedPerson, page, debouncedNameQuery, debouncedZoneQuery, statusFilter, hasUpdatesFilter]);
 
   const displayCases = cases.filter((item) => 
     viewTab === "personas" ? (item.kind === "missing" || item.kind === "found") : 
@@ -125,7 +128,7 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
           if (e.target === e.currentTarget) {
             setSelectedPerson(null);
             setShowEmergencyHelp(false);
-            window.location.hash = "";
+            window.location.href = "/";
           }
         }}>
           {activeModal === "desaparecido" && (
@@ -350,8 +353,29 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
               type="search"
             />
           </label>
-          <div className="search-actions">
+          <div className="search-actions" style={{ display: "flex", flexWrap: "wrap", gap: "1rem", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
             <span>{totalItems} reportes encontrados</span>
+            
+            <button 
+              onClick={() => { setHasUpdatesFilter(!hasUpdatesFilter); setPage(1); }}
+              type="button"
+              style={{
+                padding: "0.5rem 1rem",
+                borderRadius: "0.5rem",
+                border: "2px solid #22c55e",
+                backgroundColor: hasUpdatesFilter ? "#22c55e" : "#f0fdf4",
+                color: hasUpdatesFilter ? "white" : "#16a34a",
+                fontWeight: "bold",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                cursor: "pointer",
+                transition: "all 0.2s"
+              }}
+            >
+              <span className={hasUpdatesFilter ? "" : "animate-pulse"}>🔔</span>
+              {hasUpdatesFilter ? "Mostrando actualizaciones" : "Ver casos con actualizaciones"}
+            </button>
             <Link href="/mapa">Ver en el mapa</Link>
           </div>
         </section>

@@ -10,9 +10,10 @@ export async function GET(request: Request) {
   const query = searchParams.get("query") || "";
   const zone = searchParams.get("zone") || "";
   const status = searchParams.get("status") || "";
+  const hasUpdates = searchParams.get("hasUpdates") === "true";
 
   try {
-    const data = await getPublicCasesFromDb(page, limit, query, zone, status);
+    const data = await getPublicCasesFromDb(page, limit, query, zone, status, hasUpdates);
     return NextResponse.json({ 
       data: data.items, 
       total: data.total, 
