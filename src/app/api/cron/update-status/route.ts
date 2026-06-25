@@ -24,7 +24,7 @@ export async function POST(request: Request) {
 
   try {
     while (hasMore) {
-      if (page > 1) await delay(2000); 
+      if (page > 1) await delay(500); 
 
       let res;
       let success = false;
@@ -118,8 +118,8 @@ Nota original: ${p.localizadoNota || ''}`.trim();
           // Add a community note if they just transitioned from missing to located
           if (existingRow.status === 'missing') {
             await db.execute({
-              sql: `INSERT INTO person_notes (id, person_id, created_at, source, author_name, author_contact, note_type, content) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+              sql: `INSERT INTO person_notes (id, person_id, created_at, source, author_name, author_contact, text) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?)`,
               args: [
                 `pn_${nanoid(10)}`, 
                 id, 
@@ -127,8 +127,7 @@ Nota original: ${p.localizadoNota || ''}`.trim();
                 'community_update', 
                 p.localizadoPor || 'Sistema', 
                 p.localizadoContacto || '', 
-                'status_update', 
-                `Persona localizada. ${finderInfo}`
+                `Reportado como LOCALIZADO desde la base de datos externa.\nNota original: ${p.localizadoNota || ''}`
               ]
             });
             totalUpdated++;

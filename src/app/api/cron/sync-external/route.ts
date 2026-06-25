@@ -29,9 +29,9 @@ export async function POST(request: Request) {
 
   try {
     while (hasMore) { 
-      // Very small delay to respect API but maximize speed (100ms instead of 2s)
+      // Delay to respect API but maximize speed (500ms)
       if (page > 1) {
-        await delay(100); 
+        await delay(500); 
       }
 
       let res;
