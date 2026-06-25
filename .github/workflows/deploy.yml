@@ -2,7 +2,7 @@ name: Deploy to Coolify
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   workflow_dispatch:
 
 jobs:
@@ -26,12 +26,28 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Select Coolify app
+        id: coolify
+        run: |
+          if [ "${GITHUB_REF_NAME}" = "develop" ]; then
+            echo "app_uuid=${{ secrets.COOLIFY_STAGING_APP_UUID }}" >> "$GITHUB_OUTPUT"
+            echo "environment=staging" >> "$GITHUB_OUTPUT"
+          else
+            echo "app_uuid=${{ secrets.COOLIFY_PRODUCTION_APP_UUID }}" >> "$GITHUB_OUTPUT"
+            echo "environment=production" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Trigger Coolify deployment
         env:
-          COOLIFY_WEBHOOK_URL: ${{ secrets.COOLIFY_WEBHOOK_URL }}
+          COOLIFY_BASE_URL: ${{ secrets.COOLIFY_BASE_URL }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+          COOLIFY_APP_UUID: ${{ steps.coolify.outputs.app_uuid }}
         run: |
-          if [ -n "$COOLIFY_WEBHOOK_URL" ]; then
-            curl -fsS -X POST "$COOLIFY_WEBHOOK_URL"
-          else
-            echo "COOLIFY_WEBHOOK_URL is not configured; skipping webhook trigger."
+          if [ -z "$COOLIFY_BASE_URL" ] || [ -z "$COOLIFY_TOKEN" ] || [ -z "$COOLIFY_APP_UUID" ]; then
+            echo "Coolify deployment secrets are not fully configured."
+            exit 1
           fi
+          curl -fsS "$COOLIFY_BASE_URL/deploy?uuid=$COOLIFY_APP_UUID" \
+            -H "Authorization: Bearer $COOLIFY_TOKEN" \
+            -H "Content-Type: application/json"
+          echo "Triggered Coolify ${{ steps.coolify.outputs.environment }} deployment."

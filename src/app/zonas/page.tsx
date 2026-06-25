@@ -13,10 +13,10 @@ export default async function ZonasDashboard() {
   const zones = await getZoneStats();
 
   // Filter out zones that don't have a valid name or cases
-  const validZones = zones.filter(z => z.zone && z.total > 0 && z.zone !== "Desconocida");
+  const validZones = zones.filter((z: any) => z.zone && z.total > 0 && z.zone !== "Desconocida");
   
   // Sort primarily by total cases
-  validZones.sort((a, b) => b.total - a.total);
+  validZones.sort((a: any, b: any) => b.total - a.total);
 
   return (
     <>
