@@ -517,3 +517,46 @@ export async function createCaseInDb(kind: string, payload: Record<string, unkno
 
   return { id, slug: normalizeSlug(`${kind}-${id}`), status: "needs_verification" };
 }
+
+export async function getZoneStats() {
+  const { db } = await getDb();
+  
+  const zonesRes = await db.execute({
+    sql: `SELECT location_zone, COUNT(*) as total
+          FROM persons 
+          WHERE location_zone IS NOT NULL AND is_deleted = 0 AND status IN ('missing', 'reported')
+          GROUP BY location_zone
+          ORDER BY total DESC`,
+    args: []
+  });
+
+  const hotspotsRes = await db.execute({
+    sql: `SELECT location_zone, location_normalized, COUNT(*) as total
+          FROM persons
+          WHERE location_normalized IS NOT NULL AND is_deleted = 0 AND status IN ('missing', 'reported')
+          GROUP BY location_zone, location_normalized
+          HAVING total >= 2
+          ORDER BY location_zone ASC, total DESC`,
+    args: []
+  });
+
+  const zones = zonesRes.rows.map(r => ({
+    zone: text(r.location_zone),
+    total: number(r.total, 0),
+    hotspots: [] as { address: string, count: number }[]
+  }));
+
+  for (const hotspot of hotspotsRes.rows) {
+    const zoneName = text(hotspot.location_zone);
+    const address = text(hotspot.location_normalized);
+    const count = number(hotspot.total, 0);
+
+    const zoneObj = zones.find(z => z.zone === zoneName);
+    // Ignore hotspots that are exactly just the zone name (not specific enough)
+    if (zoneObj && address && address.toLowerCase() !== zoneName.toLowerCase() && address.length > 5) {
+      zoneObj.hotspots.push({ address, count });
+    }
+  }
+
+  return zones;
+}

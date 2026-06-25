@@ -6,7 +6,7 @@ const db = createClient({
 });
 
 async function syncExternal() {
-  let page = 1;
+  let page = 90;
   const pageSize = 500;
   let hasMore = true;
 
