@@ -99,7 +99,7 @@ export async function GET(request: Request) {
               textTransform: "uppercase",
               letterSpacing: "0.05em",
             }}>
-              ¡Ayúdame a difundir!
+              Compartir con cuidado
             </h2>
             
             <h1 style={{
@@ -109,17 +109,17 @@ export async function GET(request: Request) {
               margin: "0 0 32px 0",
               lineHeight: 1.1,
             }}>
-              {item.kind === "missing" ? "Buscamos a " : "Reporte: "}{item.title}
+              {item.kind === "missing" ? "Buscamos información sobre " : "Reporte sobre "}{item.title}
             </h1>
             
             <div style={{ display: "flex", flexDirection: "column", gap: isStory ? "32px" : "24px" }}>
               <div style={{ display: "flex", flexDirection: "column" }}>
-                <span style={{ color: "#64748b", fontSize: isStory ? "1.8rem" : "1.4rem", fontWeight: "bold", textTransform: "uppercase", marginBottom: "4px" }}>Ubicación / Zona</span>
+                <span style={{ color: "#64748b", fontSize: isStory ? "1.8rem" : "1.4rem", fontWeight: "bold", textTransform: "uppercase", marginBottom: "4px" }}>Zona aproximada</span>
                 <span style={{ color: "#334155", fontSize: isStory ? "2.4rem" : "1.8rem", fontWeight: "bold" }}>{item.publicAddress || item.zone}</span>
               </div>
               
               <div style={{ display: "flex", flexDirection: "column" }}>
-                <span style={{ color: "#64748b", fontSize: isStory ? "1.8rem" : "1.4rem", fontWeight: "bold", textTransform: "uppercase", marginBottom: "4px" }}>Tipo de Reporte</span>
+                <span style={{ color: "#64748b", fontSize: isStory ? "1.8rem" : "1.4rem", fontWeight: "bold", textTransform: "uppercase", marginBottom: "4px" }}>Tipo de reporte</span>
                 <span style={{ color: "#334155", fontSize: isStory ? "2.4rem" : "1.8rem", fontWeight: "bold" }}>{kindLabels[item.kind] || item.kind}</span>
               </div>
             </div>

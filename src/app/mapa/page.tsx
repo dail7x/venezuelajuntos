@@ -9,16 +9,16 @@ export default function MapPage() {
       <Header />
       <main className="map-page">
         <section className="section-heading">
-          <p className="eyebrow">Mapa de ayuda</p>
-          <h1>Casos por zona, urgencia y estado</h1>
+          <p className="eyebrow">Mapa comunitario</p>
+          <h1>Reportes por zona, prioridad y estado</h1>
         </section>
         <div className="filters" aria-label="Filtros">
           <button>Todos</button>
-          <button>Rescate critico</button>
-          <button>Medico/traslado</button>
-          <button>Desaparecidos</button>
-          <button>Encontrados</button>
-          <button>Cerca de mi · 5 km</button>
+          <button>Rescate crítico</button>
+          <button>Médico o traslado</button>
+          <button>Personas en búsqueda</button>
+          <button>Personas localizadas</button>
+          <button>Cerca de mí · 5 km</button>
         </div>
         <MapPanel />
         <section className="case-grid">

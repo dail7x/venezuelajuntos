@@ -14,8 +14,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     };
   }
 
-  const title = `Buscamos a ${item.title} - ${kindLabels[item.kind] || 'Reporte'}`;
-  const description = `Por favor ayúdame a difundir. Visto por última vez en ${item.publicAddress || item.zone}. Estado: ${statusLabels[item.status] || 'Desconocido'}.`;
+  const title = `${item.title} | ${kindLabels[item.kind] || 'Reporte'} en Venezuela Juntos`;
+  const description = `Comparte sólo información confirmada. Zona aproximada: ${item.publicAddress || item.zone}. Estado: ${statusLabels[item.status] || 'Desconocido'}.`;
 
   return {
     title,
@@ -70,14 +70,14 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
 
         <section className="detail-grid">
           <article>
-            <h2>Ubicacion publica</h2>
+            <h2>Ubicación pública</h2>
             <p>{item.publicAddress}</p>
-            <p className="muted">Zona aproximada: {item.zone}. La ubicacion exacta y contactos se protegen.</p>
+            <p className="muted">Zona aproximada: {item.zone}. La ubicación exacta y los contactos se protegen.</p>
           </article>
           <article>
-            <h2>Ultima confirmacion</h2>
-            <p>{item.lastConfirmedAt ? new Date(item.lastConfirmedAt).toLocaleString("es-VE", { dateStyle: "medium", timeStyle: "short" }) : "Sin confirmacion reciente"}</p>
-            <p className="muted">Fuente publica: {item.reporterPublic}</p>
+            <h2>Última confirmación</h2>
+            <p>{item.lastConfirmedAt ? new Date(item.lastConfirmedAt).toLocaleString("es-VE", { dateStyle: "medium", timeStyle: "short" }) : "Sin confirmación reciente"}</p>
+            <p className="muted">Reporte cargado por: {item.reporterPublic}</p>
           </article>
           <article>
             <h2>Necesidades</h2>

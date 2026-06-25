@@ -22,11 +22,11 @@ export function Header() {
         </Link>
         <Link className="header-button" href="/mapa">
           <Map aria-hidden="true" />
-          <span>Mapa</span>
+          <span>Mapa de reportes</span>
         </Link>
         <Link className="header-button" href="/ayudar">
           <HandHeart aria-hidden="true" />
-          <span>Ayudar</span>
+          <span>Ofrecer ayuda</span>
         </Link>
       </nav>
     </header>

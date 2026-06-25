@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       await db.execute({
         sql: `INSERT INTO person_notes (id, person_id, created_at, text, author_name, author_role, note_status)
               VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        args: [`note-${Date.now()}`, caseId, Date.now(), `Marcado como duplicado colaborativamente. Duplicado de ID: ${duplicateOf}`, "Sistema", "admin", "duplicate"]
+        args: [`note-${Date.now()}`, caseId, Date.now(), `Marcado como posible ficha repetida por la comunidad. Ficha relacionada: ${duplicateOf}`, "Sistema", "admin", "duplicate"]
       });
     } else {
       // Clear the potential duplicate flag

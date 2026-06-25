@@ -43,7 +43,7 @@ export function CaseDetailModal({
   const handleCopyLink = () => {
     const url = `https://venezuelajuntos.online/casos/${item.id}`;
     navigator.clipboard.writeText(url).then(() => {
-      alert("¡Enlace copiado al portapapeles!");
+      alert("Enlace copiado.");
     });
   };
 
@@ -196,7 +196,7 @@ export function CaseDetailModal({
 
   const handleRevertStatusSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!window.confirm("¿Estás seguro de que quieres volver a marcar a esta persona como desaparecida?")) return;
+    if (!window.confirm("Confirma sólo si tienes información suficiente para volver a dejar esta ficha en búsqueda.")) return;
     setIsSavingStatus(true);
     setNoteError("");
 
@@ -209,7 +209,7 @@ export function CaseDetailModal({
           status: "missing", // Using "missing" / "reported" equivalent
           authorName: statusFormName,
           authorContact: statusFormContact,
-          text: item.kind === "help" ? `Volvió a marcar como pendiente. Razón: ${statusFormText}` : `Volvió a marcar como desaparecido. Razón: ${statusFormText}`,
+          text: item.kind === "help" ? `Volvió a marcar como pendiente. Razón: ${statusFormText}` : `Volvió a marcar como en búsqueda. Razón: ${statusFormText}`,
         }),
       });
 
@@ -261,38 +261,47 @@ export function CaseDetailModal({
         
         <div className="case-modal-media">
           {(showStatusPill || item.kind === "help") && (
-            <span className={`photo-pill ${item.status === 'located' || item.status === 'reunified' || item.status === 'resolved' ? 'located' : 'missing'}`}>
+          <span className={`photo-pill ${item.status === 'located' || item.status === 'reunified' || item.status === 'resolved' ? 'located' : 'missing'}`}>
               {item.kind === "help" 
                 ? (item.status === 'located' || item.status === 'reunified' || item.status === 'resolved' ? 'Atendida' : 'Pendiente')
-                : (item.status === 'located' || item.status === 'reunified' ? 'Ya apareció' : 'Desaparecido')}
+                : (item.status === 'located' || item.status === 'reunified' ? 'Localizada' : 'En búsqueda')}
             </span>
           )}
           {item.photoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img alt={`Foto de ${item.title}`} src={item.photoUrl} />
+            item.photoUrl.includes(',') ? (
+              <div style={{ display: 'flex', overflowX: 'auto', gap: '4px', width: '100%', scrollbarWidth: 'none', scrollSnapType: 'x mandatory' }}>
+                {item.photoUrl.split(',').filter(Boolean).map((url, idx) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img key={idx} alt={`Foto de ${item.title} ${idx+1}`} src={url} style={{ flex: '0 0 100%', scrollSnapAlign: 'center', objectFit: 'cover' }} />
+                ))}
+              </div>
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img alt={`Foto de ${item.title}`} src={item.photoUrl} />
+            )
           ) : (
-            <div className="image-placeholder">Sin foto publica</div>
+            <div className="image-placeholder">Sin foto pública</div>
           )}
         </div>
 
         <div className="case-modal-body">
           {isEditing ? (
             <form className="edit-form" onSubmit={handleEditSubmit}>
-              <h2>Editar Ficha Informativa</h2>
-              <p className="muted" style={{ marginBottom: "16px" }}>Modo Administrador</p>
+              <h2>Editar ficha informativa</h2>
+              <p className="muted" style={{ marginBottom: "16px" }}>Modo administrador</p>
               
               {editError && <div className="error-banner">{editError}</div>}
 
               <div className="form-row">
                 <label>
-                  <span>Nombre Completo *</span>
+                  <span>Nombre completo *</span>
                   <input name="fullName" type="text" required defaultValue={item.title} />
                 </label>
               </div>
 
               <div className="form-row split-2">
                 <label>
-                  <span>Apodo o Nombre Conocido</span>
+                  <span>Apodo o nombre conocido</span>
                   <input name="alternateNames" type="text" defaultValue="" />
                 </label>
                 <label>
@@ -327,24 +336,24 @@ export function CaseDetailModal({
                 <label>
                   <span>Estado de la persona *</span>
                   <select name="status" defaultValue={item.status}>
-                    <option value="missing">Desaparecido / Reportado</option>
-                    <option value="located">Localizado / Ya apareció</option>
+                    <option value="missing">En búsqueda</option>
+                    <option value="located">Localizado</option>
                     <option value="reunified">Reunificado con familia</option>
-                    <option value="duplicate">Duplicado</option>
+                    <option value="duplicate">Posible ficha repetida</option>
                   </select>
                 </label>
               </div>
 
               <div className="form-row admin-pw-row">
                 <label>
-                  <span>Contraseña Administrador *</span>
+                  <span>Contraseña de administrador *</span>
                   <input name="adminPassword" type="password" required placeholder="Ingresar contraseña" />
                 </label>
               </div>
 
               <div className="form-actions edit-actions">
                 <button className="secondary-button" type="button" onClick={() => setIsEditing(false)}>Cancelar</button>
-                <button type="submit" disabled={isSavingEdit}>{isSavingEdit ? "Guardando..." : "Guardar Ficha"}</button>
+                <button type="submit" disabled={isSavingEdit}>{isSavingEdit ? "Guardando..." : "Guardar ficha"}</button>
               </div>
             </form>
           ) : (
@@ -352,17 +361,17 @@ export function CaseDetailModal({
               {duplicateCase && item.potentialDuplicateOf ? (
                 <div style={{ background: "#fff7ed", padding: "16px", borderRadius: "8px", border: "1px solid #fed7aa", marginBottom: "20px" }}>
                   <h3 style={{ color: "#c2410c", marginTop: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    ⚠️ Posible Registro Duplicado
+                    Posible ficha repetida
                   </h3>
                   <p style={{ fontSize: "0.9rem", color: "#9a3412", marginBottom: "16px" }}>
-                    Ayúdanos a mantener la base de datos limpia. ¿Es esta la misma persona que el registro original?
+                    Ayúdanos a unir información. ¿Esta ficha habla de la misma persona que el registro anterior?
                   </p>
                   
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
                     <div style={{ padding: "12px", background: "white", borderRadius: "6px", border: "1px solid #fed7aa" }}>
                       <span className="eyebrow" style={{ color: "#c2410c" }}>Registro Original</span>
                       <div style={{ fontWeight: "bold", marginBottom: "4px", fontSize: "1.1rem" }}>{duplicateCase.title}</div>
-                      <div style={{ fontSize: "0.85rem", color: "#64748b", marginBottom: "8px" }}>📍 {duplicateCase.zone}</div>
+                      <div style={{ fontSize: "0.85rem", color: "#64748b", marginBottom: "8px" }}>{duplicateCase.zone}</div>
                       {duplicateCase.photoUrl && (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={duplicateCase.photoUrl} alt="Foto original" style={{ width: "100%", height: "120px", objectFit: "cover", borderRadius: "4px" }} />
@@ -372,7 +381,7 @@ export function CaseDetailModal({
                     <div style={{ padding: "12px", background: "white", borderRadius: "6px", border: "1px solid #fed7aa" }}>
                       <span className="eyebrow" style={{ color: "#c2410c" }}>Este Registro (Nuevo)</span>
                       <div style={{ fontWeight: "bold", marginBottom: "4px", fontSize: "1.1rem" }}>{item.title}</div>
-                      <div style={{ fontSize: "0.85rem", color: "#64748b", marginBottom: "8px" }}>📍 {item.zone}</div>
+                      <div style={{ fontSize: "0.85rem", color: "#64748b", marginBottom: "8px" }}>{item.zone}</div>
                       {item.photoUrl && (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={item.photoUrl} alt="Foto nueva" style={{ width: "100%", height: "120px", objectFit: "cover", borderRadius: "4px" }} />
@@ -387,7 +396,7 @@ export function CaseDetailModal({
                       disabled={isVotingDuplicate}
                       onClick={() => handleDuplicateVote(true)}
                     >
-                      ✅ Sí, son la misma persona
+                      Si, parece la misma persona
                     </button>
                     <button 
                       className="secondary-button" 
@@ -395,7 +404,7 @@ export function CaseDetailModal({
                       disabled={isVotingDuplicate}
                       onClick={() => handleDuplicateVote(false)}
                     >
-                      ❌ No, son personas distintas
+                      No, son personas distintas
                     </button>
                   </div>
                 </div>
@@ -405,7 +414,7 @@ export function CaseDetailModal({
                 <p className="eyebrow">{kindLabels[item.kind]}</p>
                 {isPerson && (
                   <button className="edit-trigger-button" onClick={() => setIsEditing(true)}>
-                    ✏️ Editar
+                    Editar
                   </button>
                 )}
               </div>
@@ -426,7 +435,7 @@ export function CaseDetailModal({
                     fontWeight: 600, cursor: "pointer"
                   }}
                 >
-                  🔗 Copiar enlace
+                  Copiar enlace
                 </button>
                 <button
                   type="button"
@@ -438,35 +447,43 @@ export function CaseDetailModal({
                     fontWeight: 600, cursor: "pointer"
                   }}
                 >
-                  📸 Descargar Story
+                  Descargar historia
                 </button>
               </div>
 
+              {(item.reporterName || item.reporterContact) && (
+                <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "8px", border: "1px solid #e2e8f0", marginBottom: "16px" }}>
+                  <h4 style={{ margin: "0 0 8px 0", color: "#334155", fontSize: "0.95rem" }}>Datos de quien reporta</h4>
+                  {item.reporterName && <p style={{ margin: "0 0 4px 0", fontSize: "0.9rem" }}><strong>Nombre:</strong> {item.reporterName}</p>}
+                  {item.reporterContact && <p style={{ margin: 0, fontSize: "0.9rem" }}><strong>Contacto:</strong> {item.reporterContact}</p>}
+                </div>
+              )}
+
               <dl className="case-modal-facts">
                 <div><dt>Zona</dt><dd>{item.zone}</dd></div>
-                <div><dt>Ubicacion publica</dt><dd>{item.publicAddress}</dd></div>
-                <div><dt>Ultima actualizacion</dt><dd>{new Date(item.updatedAt).toLocaleString("es-VE", { dateStyle: "medium", timeStyle: "short" })}</dd></div>
+                <div><dt>Ubicación pública</dt><dd>{item.publicAddress}</dd></div>
+                <div><dt>Última actualización</dt><dd>{new Date(item.updatedAt).toLocaleString("es-VE", { dateStyle: "medium", timeStyle: "short" })}</dd></div>
               </dl>
               
               {(isPerson || item.kind === "help") && (item.status === 'missing' || item.status === 'reported') && (
                 <div className="report-action-card">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                      <h3 style={{ margin: "0 0 4px 0", color: "#166534" }}>{item.kind === "help" ? "¿Ya fue atendida esta petición?" : "¿Ya apareció?"}</h3>
+                      <h3 style={{ margin: "0 0 4px 0", color: "#166534" }}>{item.kind === "help" ? "¿Ya recibieron ayuda?" : "¿Ya fue localizada?"}</h3>
                       <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--ink-soft)" }}>
-                        {item.kind === "help" ? "Si ya se resolvió esta petición de ayuda, repórtalo para actualizar el estado." : "Si tienes información confirmada de que esta persona ya fue localizada, repórtalo para actualizar el estado."}
+                        {item.kind === "help" ? "Si la situación ya fue atendida, avísanos para que otras personas puedan priorizar casos pendientes." : "Si tienes información confirmada de que esta persona fue localizada, avísanos para actualizar la ficha con cuidado."}
                       </p>
                     </div>
                     {!showLocatedForm && (
                       <button className="primary-button" style={{ background: "#16a34a", color: "white", padding: "8px 16px", flexShrink: 0 }} onClick={() => setShowLocatedForm(true)}>
-                        {item.kind === "help" ? "Marcar como atendida" : "Reportar aparición"}
+                        {item.kind === "help" ? "Marcar como atendida" : "Avisar que fue localizada"}
                       </button>
                     )}
                   </div>
                   
                   {showLocatedForm && (
                     <form className="add-note-form" onSubmit={handleStatusChangeSubmit} style={{ marginTop: "1rem" }}>
-                      <h4>Datos de quien reporta la aparición</h4>
+                      <h4>Datos de quien confirma</h4>
                       <div className="note-form-grid" style={{ marginBottom: "1rem" }}>
                         <input
                           type="text"
@@ -477,14 +494,14 @@ export function CaseDetailModal({
                         />
                         <input
                           type="text"
-                          placeholder="Teléfono (para verificación del equipo)"
+                          placeholder="Teléfono para verificación"
                           required
                           value={statusFormContact}
                           onChange={(e) => setStatusFormContact(e.target.value)}
                         />
                       </div>
                       <textarea
-                        placeholder="Da detalles de dónde y cómo se encontró (solo info confirmada)"
+                        placeholder="Comparte dónde y cómo fue localizada, sólo con información confirmada"
                         rows={3}
                         required
                         value={statusFormText}
@@ -493,7 +510,7 @@ export function CaseDetailModal({
                       <div className="form-actions" style={{ flexDirection: 'row', gap: '8px', display: 'flex' }}>
                         <button className="secondary-button" type="button" onClick={() => setShowLocatedForm(false)}>Cancelar</button>
                         <button type="submit" disabled={isSavingStatus}>
-                          {isSavingStatus ? "Guardando..." : "Confirmar reporte"}
+                          {isSavingStatus ? "Guardando..." : "Confirmar información"}
                         </button>
                       </div>
                     </form>
@@ -505,21 +522,21 @@ export function CaseDetailModal({
                 <div className="report-action-card" style={{ background: '#fef2f2', borderColor: '#fecaca' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                      <h3 style={{ margin: "0 0 4px 0", color: "#991b1b" }}>{item.kind === "help" ? "¿Aún no está atendida?" : "¿Hubo un error?"}</h3>
+                      <h3 style={{ margin: "0 0 4px 0", color: "#991b1b" }}>{item.kind === "help" ? "¿La ayuda sigue pendiente?" : "¿La persona sigue desaparecida?"}</h3>
                       <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--ink-soft)" }}>
-                        {item.kind === "help" ? "Si esta petición sigue pendiente, puedes revertir el estado." : "Si esta persona sigue desaparecida, puedes volver a cambiar el estado."}
+                        {item.kind === "help" ? "Si se marcó como atendida por error, puedes volver a dejarla como pendiente." : "Si se marcó como localizada por error, puedes volver a dejar la ficha en búsqueda."}
                       </p>
                     </div>
                     {!showRevertForm && (
                       <button className="primary-button" style={{ background: "#ef4444", color: "white", padding: "8px 16px", flexShrink: 0 }} onClick={() => setShowRevertForm(true)}>
-                        {item.kind === "help" ? "Marcar como pendiente" : "Marcar desaparecido"}
+                        {item.kind === "help" ? "Marcar como pendiente" : "Volver a búsqueda"}
                       </button>
                     )}
                   </div>
                   
                   {showRevertForm && (
                     <form className="add-note-form" onSubmit={handleRevertStatusSubmit} style={{ marginTop: "1rem" }}>
-                      <h4>Razón para revertir el estado</h4>
+                      <h4>Motivo del cambio</h4>
                       <input
                         type="text"
                         placeholder="Tu nombre"
@@ -529,7 +546,7 @@ export function CaseDetailModal({
                         style={{ marginBottom: "0.5rem" }}
                       />
                       <textarea
-                        placeholder="Explica la razón detalladamente"
+                        placeholder="Explica por que debemos corregir el estado"
                         rows={3}
                         required
                         value={statusFormText}
@@ -549,11 +566,11 @@ export function CaseDetailModal({
               {(isPerson || item.kind === "help") && (
                 <div className="case-updates-section">
                   <hr style={{ margin: "24px 0", borderColor: "var(--line)" }} />
-                  <h3>Historial de Actualizaciones</h3>
+                  <h3>Actualizaciones de la comunidad</h3>
                   
                   {notes.length === 0 ? (
                     <p className="muted" style={{ fontSize: "0.85rem", margin: "12px 0" }}>
-                      No hay actualizaciones registradas para este reporte.
+                      Aun no hay actualizaciones registradas para este reporte.
                     </p>
                   ) : (
                     <div className="timeline">
@@ -574,11 +591,11 @@ export function CaseDetailModal({
                   )}
 
                   <form className="add-note-form" onSubmit={handleNoteSubmit}>
-                    <h4>Agregar nueva actualización o pista</h4>
+                    <h4>Agregar información o una pista</h4>
                     {noteError && <p className="error">{noteError}</p>}
                     
                     <textarea
-                      placeholder="Escribe aquí cualquier información relevante (ej. 'Visto hoy a las 3pm en la Plaza Bolivar vistiendo franela azul')"
+                      placeholder="Comparte información concreta: lugar, hora, ropa o con quién estaba. Evita publicar datos sensibles innecesarios."
                       rows={2}
                       required
                       value={noteText}

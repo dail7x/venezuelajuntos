@@ -3,9 +3,9 @@ import Script from "next/script";
 export default function SugerenciasPage() {
   return (
     <main style={{ padding: "2rem 1rem", maxWidth: "800px", margin: "0 auto", minHeight: "80vh" }}>
-      <h1 style={{ marginBottom: "1rem", color: "var(--ink)" }}>Sugerencias y Contacto para ONGs</h1>
+      <h1 style={{ marginBottom: "1rem", color: "var(--ink)" }}>Coordinar apoyo y compartir mejoras</h1>
       <p style={{ color: "var(--ink-soft)", marginBottom: "2rem" }}>
-        Utiliza este formulario para dejarnos tus comentarios, o si representas a una ONG o grupo de rescate y deseas colaborar.
+        Si representas a una ONG, iglesia, grupo de rescate, medio comunitario o equipo de voluntarios, puedes escribirnos para coordinar mejor. También recibimos correcciones y sugerencias para cuidar mejor a las personas afectadas.
       </p>
       
       <iframe 

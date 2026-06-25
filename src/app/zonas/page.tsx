@@ -5,7 +5,7 @@ import { Metadata } from "next";
 type ZoneStats = Awaited<ReturnType<typeof getZoneStats>>[number];
 
 export const metadata: Metadata = {
-  title: "Inteligencia Zonal | Venezuela Juntos",
+  title: "Zonas con más reportes | Venezuela Juntos",
   robots: "noindex, nofollow"
 };
 
@@ -25,15 +25,15 @@ export default async function ZonasDashboard() {
       <Header />
       <main style={{ padding: "2rem 1rem", maxWidth: "1200px", margin: "0 auto", minHeight: "80vh" }}>
         <div style={{ marginBottom: "2rem", borderBottom: "1px solid var(--line)", paddingBottom: "1rem" }}>
-          <h1 style={{ color: "var(--ink)", marginBottom: "0.5rem" }}>Dashboard Zonal (En vivo)</h1>
+          <h1 style={{ color: "var(--ink)", marginBottom: "0.5rem" }}>Zonas con más reportes activos</h1>
           <p style={{ color: "var(--ink-soft)", margin: 0 }}>
-            Este panel extrae información de las direcciones reportadas y normalizadas por inteligencia artificial para detectar focos y concentraciones de casos activos (Desaparecidos o Reportados).
+            Este panel ayuda a ver concentraciones de reportes por zona para orientar verificación, llamadas y apoyo comunitario.
           </p>
         </div>
 
         {validZones.length === 0 ? (
           <div style={{ textAlign: "center", padding: "3rem", background: "var(--card-bg)", borderRadius: "8px" }}>
-            <p style={{ color: "var(--ink-soft)", fontSize: "1.2rem" }}>Aún no hay suficientes datos normalizados por la IA para generar el mapa zonal.</p>
+            <p style={{ color: "var(--ink-soft)", fontSize: "1.2rem" }}>Aún no hay suficientes reportes con zona clara para generar este resumen.</p>
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
@@ -56,7 +56,7 @@ export default async function ZonasDashboard() {
                   gap: "1rem"
                 }}>
                   <h2 style={{ margin: 0, fontSize: "1.5rem", color: "var(--blue)" }}>
-                    📍 {z.zone}
+                    {z.zone}
                   </h2>
                   <div style={{ 
                     background: "var(--blue)", 
@@ -72,7 +72,7 @@ export default async function ZonasDashboard() {
 
                 {/* Hotspots */}
                 <div style={{ padding: "1.5rem" }}>
-                  <h3 style={{ margin: "0 0 1rem 0", fontSize: "1.1rem", color: "var(--ink)" }}>Puntos Críticos (Edificios / Calles en común)</h3>
+                  <h3 style={{ margin: "0 0 1rem 0", fontSize: "1.1rem", color: "var(--ink)" }}>Puntos con reportes repetidos</h3>
                   
                   {z.hotspots.length > 0 ? (
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1rem" }}>
@@ -105,7 +105,7 @@ export default async function ZonasDashboard() {
                     </div>
                   ) : (
                     <p style={{ margin: 0, color: "var(--ink-soft)", fontSize: "0.95rem" }}>
-                      No se detectaron puntos específicos con más de 1 caso en esta zona.
+                      No se detectaron puntos específicos con más de un reporte en esta zona.
                     </p>
                   )}
                 </div>

@@ -5,9 +5,9 @@ import { useState } from "react";
 const actions = [
   ["confirmed", "Confirmo activo"],
   ["canHelp", "Puedo ayudar"],
-  ["duplicate", "Duplicado"],
-  ["falseReport", "Parece falso"],
-  ["resolved", "Ya resuelto"],
+  ["duplicate", "Puede estar repetido"],
+  ["falseReport", "Revisar este reporte"],
+  ["resolved", "Ya fue atendido"],
 ] as const;
 
 export function SignalButtons({ caseId, kind }: { caseId: string; kind?: string }) {
@@ -28,7 +28,7 @@ export function SignalButtons({ caseId, kind }: { caseId: string; kind?: string 
         let finalLabel: string = label;
         if (type === "resolved") {
           if (kind === "missing" || kind === "found") {
-            finalLabel = "Ya apareció";
+            finalLabel = "Ya fue localizada";
           } else if (kind === "pet_lost" || kind === "pet_found") {
             finalLabel = "Mascota encontrada";
           }

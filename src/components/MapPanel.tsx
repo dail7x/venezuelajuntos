@@ -16,7 +16,7 @@ export function MapPanel({ cases = seedCases, compact = false }: { cases?: Publi
           <strong>Mapa publico aproximado</strong>
           <span>Ubicaciones exactas protegidas</span>
         </div>
-        <button type="button">Usar mi ubicacion</button>
+        <button type="button">Usar mi ubicación</button>
       </div>
       <div className="map-canvas" aria-label="Mapa aproximado de casos reportados">
         <LeafletCaseMap cases={cases} compact={compact} />

@@ -6,8 +6,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://venezuelajuntos.online"),
-  title: "Venezuela Juntos | Emergencia",
-  description: "Plataforma ciudadana para reportar desaparecidos, encontrados y solicitudes de ayuda.",
+  title: "Venezuela Juntos | Nos buscamos y acompañamos",
+  description: "Herramienta ciudadana para buscar personas, avisar reencuentros y coordinar ayuda con respeto durante la emergencia.",
   openGraph: {
     images: [{ url: "/og-image.jpg", width: 1200, height: 630 }],
   },

@@ -72,6 +72,7 @@ function mapPerson(row: Row): PublicCase {
     kind: status === "located" || status === "reunified" ? "found" : "missing",
     title: name,
     personName: name,
+    cedula: typeof row.cedula_identidad === "number" ? row.cedula_identidad : undefined,
     age: typeof row.age_estimated === "number" ? row.age_estimated : undefined,
     status,
     zone,
@@ -81,12 +82,14 @@ function mapPerson(row: Row): PublicCase {
     createdAt: dateIso(row.created_at),
     updatedAt: dateIso(row.updated_at),
     lastConfirmedAt: dateIso(row.updated_at),
-    description: text(row.physical_desc || row.found_notes || row.clothing_desc, "Reporte pendiente de verificacion."),
+    description: text(row.physical_desc || row.found_notes || row.clothing_desc, "Información pendiente de revisión."),
     photoUrl: resolvePhotoUrl(text(row.photo_url)),
     reporterPublic: text(row.author_relation, "Reporte ciudadano"),
+    reporterName: text(row.author_name) || undefined,
+    reporterContact: text(row.author_contact) || undefined,
     signals: signals(),
     sensitiveHidden: true,
-    needs: status === "missing" ? ["Informacion verificada", "Cruce con encontrados"] : ["Verificacion familiar"],
+    needs: status === "missing" ? ["Información confirmada", "Cruce con personas localizadas"] : ["Verificación familiar"],
   };
 }
 
@@ -107,11 +110,13 @@ function mapRequest(row: Row): PublicCase {
     createdAt: dateIso(row.created_at),
     updatedAt: dateIso(row.updated_at),
     lastConfirmedAt: dateIso(row.updated_at),
-    description: text(row.description, "Solicitud pendiente de verificacion."),
+    description: text(row.description, "Solicitud pendiente de revisión."),
     reporterPublic: "Solicitante protegido",
+    reporterName: text(row.requester_name) || undefined,
+    reporterContact: text(row.requester_contact) || undefined,
     signals: signals(),
     sensitiveHidden: true,
-    needs: [text(row.request_type, "ayuda"), "Coordinacion"],
+    needs: [text(row.request_type, "ayuda"), "Coordinar apoyo"],
   };
 }
 
@@ -132,11 +137,13 @@ function mapZone(row: Row): PublicCase {
     createdAt: dateIso(row.created_at),
     updatedAt: dateIso(row.updated_at),
     lastConfirmedAt: dateIso(row.updated_at),
-    description: text(row.description, "Zona pendiente de verificacion."),
-    reporterPublic: "Reporte ciudadano",
+    description: text(row.description, "Zona pendiente de revisión."),
+    reporterPublic: "Reporte comunitario",
+    reporterName: text(row.reporter_name) || undefined,
+    reporterContact: text(row.reporter_contact) || undefined,
     signals: signals(),
     sensitiveHidden: true,
-    needs: ["Verificacion", "Coordinacion de zona"],
+    needs: ["Verificación", "Coordinación de zona"],
   };
 }
 
@@ -159,12 +166,14 @@ function mapPet(row: Row): PublicCase {
     createdAt: dateIso(row.created_at),
     updatedAt: dateIso(row.updated_at),
     lastConfirmedAt: dateIso(row.updated_at),
-    description: text(row.description, "Reporte de mascota pendiente de verificacion."),
+    description: text(row.description, "Reporte de mascota pendiente de revisión."),
     photoUrl: resolvePhotoUrl(text(row.photo_url)),
     reporterPublic: "Contacto protegido",
+    reporterName: text(row.contact_name) || undefined,
+    reporterContact: text(row.contact_phone) || undefined,
     signals: signals(),
     sensitiveHidden: true,
-    needs: [text(row.status, "verificacion"), row.can_foster ? "Transito disponible" : "Buscar transito"],
+    needs: [text(row.status, "revisión"), row.can_foster ? "Tránsito disponible" : "Buscar tránsito"],
   };
 }
 
@@ -186,12 +195,14 @@ function mapShelter(row: Row): PublicCase {
     createdAt: dateIso(row.created_at),
     updatedAt: dateIso(row.updated_at),
     lastConfirmedAt: dateIso(row.updated_at),
-    description: text(row.description, "Reporte de refugio pendiente de verificacion."),
+    description: text(row.description, "Reporte de refugio pendiente de revisión."),
     photoUrl: resolvePhotoUrl(text(row.photo_url)),
     reporterPublic: "Contacto protegido",
+    reporterName: text(row.contact_name) || undefined,
+    reporterContact: text(row.contact_phone) || undefined,
     signals: signals(),
     sensitiveHidden: true,
-    needs: [text(row.needs || row.shelter_type, "coordinacion"), "Match por zona"],
+    needs: [text(row.needs || row.shelter_type, "coordinar apoyo"), "Cruzar por zona"],
   };
 }
 
@@ -384,14 +395,14 @@ export async function createCaseInDb(kind: string, payload: Record<string, unkno
 
     const fullName = text(payload.fullName || combinedName || payload.knownName, isFound ? "Nombre por confirmar" : "Persona sin nombre confirmado");
     const address = text(payload.lastSeenAddress || payload.currentLocation, "Zona por confirmar");
-    const description = text(payload.physicalDesc || payload.description || payload.observations, "Sin descripcion adicional.");
+    const description = text(payload.physicalDesc || payload.description || payload.observations, "Sin información adicional.");
 
     await db.execute({
       sql: `INSERT INTO persons (
         id, pfif_person_id, source, created_at, updated_at, author_name, author_contact, author_relation,
         full_name, alternate_names, sex, age_estimated, physical_desc, clothing_desc, photo_url,
-        last_seen_address, last_seen_at, status, found_address, found_notes
-      ) VALUES (?, ?, 'web_form', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        last_seen_address, last_seen_at, status, found_address, found_notes, cedula_identidad
+      ) VALUES (?, ?, 'web_form', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [
         id,
         `venezuelajuntos.online/person/${id}`,
@@ -416,6 +427,7 @@ export async function createCaseInDb(kind: string, payload: Record<string, unkno
         isFound ? "located" : "missing",
         isFound ? address : null,
         isFound ? text(payload.observations) : null,
+        payload.cedulaIdentidad ? Number(payload.cedulaIdentidad) : null,
       ],
     });
   } else if (kind === "pet_lost" || kind === "pet_found") {
@@ -433,7 +445,7 @@ export async function createCaseInDb(kind: string, payload: Record<string, unkno
         text(payload.petName),
         text(payload.petType, "mascota"),
         text(payload.status),
-        text(payload.description, "Sin descripcion adicional."),
+        text(payload.description, "Sin información adicional."),
         text(payload.zone, "Zona por confirmar"),
         text(payload.contactName),
         text(payload.contactPhone),
@@ -462,13 +474,13 @@ export async function createCaseInDb(kind: string, payload: Record<string, unkno
         payload.capacity ? Number(payload.capacity) : null,
         payload.groupSize ? Number(payload.groupSize) : null,
         text(payload.needs),
-        text(payload.description, "Sin descripcion adicional."),
+        text(payload.description, "Sin información adicional."),
       ],
     });
   } else if (kind === "help") {
     const requestType = text(payload.requestType, "other");
     const address = text(payload.address, "Zona por confirmar");
-    const description = text(payload.description, "Solicitud sin descripcion.");
+    const description = text(payload.description, "Solicitud sin información adicional.");
     const title = `${requestType.replace(/_/g, " ")} · ${address}`;
 
     await db.execute({

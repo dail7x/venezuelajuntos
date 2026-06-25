@@ -21,6 +21,7 @@ export type PublicCase = {
   kind: CaseKind;
   title: string;
   personName?: string;
+  cedula?: number;
   age?: number;
 
   status: CaseStatus;
@@ -34,6 +35,8 @@ export type PublicCase = {
   description: string;
   photoUrl?: string;
   reporterPublic: string;
+  reporterName?: string;
+  reporterContact?: string;
   signals: {
     confirmed: number;
     canHelp: number;
@@ -56,9 +59,9 @@ export const statusLabels: Record<CaseStatus, string> = {
   in_progress: "En curso",
   resolved: "Resuelto",
   closed: "Cerrado",
-  duplicate: "Duplicado",
-  false_alarm: "Falso/no verificable",
-  missing: "Desaparecido",
+  duplicate: "Posible repetido",
+  false_alarm: "Requiere revisión",
+  missing: "En búsqueda",
   possible_match: "Posible coincidencia",
   located: "Localizado",
   reunified: "Reunificado",
@@ -67,8 +70,8 @@ export const statusLabels: Record<CaseStatus, string> = {
 
 
 export const kindLabels: Record<CaseKind, string> = {
-  missing: "Persona desaparecida",
-  found: "Persona encontrada",
+  missing: "Persona en búsqueda",
+  found: "Persona localizada",
   help: "Solicitud de ayuda",
   zone: "Zona de rescate",
   pet_lost: "Mascota perdida",

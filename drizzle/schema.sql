@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS persons (
   author_name TEXT,
   author_contact TEXT,
   author_relation TEXT,
+  cedula_identidad INTEGER,
   full_name TEXT NOT NULL,
   alternate_names TEXT,
   sex TEXT,

@@ -39,7 +39,7 @@ export function CaseCard({ item, onOpen }: { item: PublicCase; onOpen?: (item: P
       <div className="case-card-image" style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", background: item.photoUrl ? undefined : "#f1f5fb", marginBottom: "12px" }}>
         {item.photoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img alt={`Foto de ${item.title}`} src={item.photoUrl} />
+          <img alt={`Foto de ${item.title}`} src={item.photoUrl.split(',')[0]} />
         ) : (
           <span style={{ fontSize: "3rem", fontWeight: "bold", color: "#94a3b8" }}>{getInitials(item.title)}</span>
         )}
@@ -53,7 +53,6 @@ export function CaseCard({ item, onOpen }: { item: PublicCase; onOpen?: (item: P
       </p>
       {item.sourceDomain && (
         <div style={{ marginTop: "1rem", fontSize: "0.85rem", color: "#5b6b7b", borderTop: "1px solid #e6ecf2", paddingTop: "0.5rem" }}>
-          <span aria-hidden="true">🌐 </span>
           {item.sourceUrl ? (
             <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#2563a8", textDecoration: "underline" }} onClick={(e) => e.stopPropagation()}>
               Fuente: {item.sourceDomain} · sin verificar

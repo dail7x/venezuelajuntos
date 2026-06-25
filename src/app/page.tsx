@@ -132,7 +132,7 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
             <ReportForm
               kind="missing"
               title="Reportar a una persona desaparecida"
-              subtitle="Comparte lo que sepas. Cada dato ayuda a que alguien la reconozca."
+              subtitle="Comparte con calma lo que sepas. Una foto, una zona o una seña pueden ayudar a que alguien la reconozca."
               fields={missingFields}
             />
           )}
@@ -140,7 +140,7 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
             <ReportForm
               kind="found"
               title="Reportar una persona encontrada"
-              subtitle="Registra información con cuidado. Las coincidencias las revisa un equipo de verificación."
+              subtitle="Registra la información con respeto. El equipo revisará posibles coincidencias antes de contactar a una familia."
               fields={foundFields}
             />
           )}
@@ -149,7 +149,7 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
               fields={petLostFields}
               kind="pet_lost"
               submitLabel="Publicar mascota perdida"
-              subtitle="Registra zona, descripción y contacto. La foto ayuda mucho a reconocerla."
+              subtitle="Sabemos que también son familia. Agrega zona, descripción y una forma segura de contacto."
               title="Reportar mascota perdida"
             />
           )}
@@ -158,7 +158,7 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
               fields={petFoundFields}
               kind="pet_found"
               submitLabel="Publicar mascota recuperada"
-              subtitle="Indica dónde está, su estado y si puedes tenerla temporalmente en tránsito."
+              subtitle="Indica donde esta, como se encuentra y si puedes cuidarla temporalmente mientras aparece su familia."
               title="Reportar mascota recuperada"
             />
           )}
@@ -167,7 +167,7 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
               fields={shelterRequestFields}
               kind="shelter_request"
               submitLabel="Solicitar refugio"
-              subtitle="Esto ayuda a buscar match con refugios cercanos y a entregar datos agregados."
+              subtitle="Cuéntanos dónde están y qué necesitan para cruzarlo con espacios cercanos disponibles."
               title="Solicitar refugio"
             />
           )}
@@ -176,15 +176,15 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
               fields={shelterOfferFields}
               kind="shelter_offer"
               submitLabel="Ofrecer refugio"
-              subtitle="Registra casas, canchas, iglesias, galpones u otros espacios disponibles."
+              subtitle="Si tienes un espacio seguro, registrarlo puede ayudar a familias que necesitan pasar la noche bajo techo."
               title="Ofrecer refugio"
             />
           )}
           {activeModal === "pedir-ayuda" && (
             <ReportForm
               kind="help"
-              title="Pedir ayuda urgente"
-              subtitle="Indica qué ocurre, dónde y qué recursos hacen falta."
+              title="Pedir ayuda ahora"
+              subtitle="Describe qué ocurre, dónde están y qué tipo de ayuda necesitan. Esta solicitud no reemplaza los servicios oficiales."
               fields={helpFields}
             />
           )}
@@ -193,10 +193,10 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
       <main className="home">
         <section className="hero">
           <div className="hero-copy">
-            <p className="eyebrow">Emergencia sismica · Venezuela</p>
-            <h1>Reportar, buscar y coordinar ayuda en un solo lugar.</h1>
+            <p className="eyebrow">Venezuela se busca y se acompaña</p>
+            <h1>Cada dato puede acercar a una familia a una respuesta.</h1>
             <p>
-              Base operativa publica para personas desaparecidas, encontradas, solicitudes urgentes y voluntarios cerca de zonas afectadas.
+              Un espacio ciudadano para buscar personas, avisar que alguien apareció, pedir ayuda y organizar apoyo con respeto, cuidado y verificación.
             </p>
           </div>
         </section>
@@ -215,7 +215,7 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
             type="button"
           >
             <Search aria-hidden="true" />
-            <span>Buscar persona desaparecida</span>
+            <span>Buscar a alguien</span>
           </button>
           <Link className="cta missing" href="/reportar/desaparecido">
             <UserRoundX aria-hidden="true" />
@@ -223,15 +223,19 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
           </Link>
           <Link className="cta found" href="/reportar/encontrado">
             <UserRoundCheck aria-hidden="true" />
-            <span>Reportar persona encontrada</span>
+            <span>Avisar que alguien aparecio</span>
           </Link>
           <button className="cta help" onClick={() => setShowEmergencyHelp(true)} type="button">
             <Siren aria-hidden="true" />
-            <span>Pedir Ayuda</span>
+            <span>Pedir ayuda ahora</span>
           </button>
           <Link className="cta volunteer" href="/ayudar">
             <HandHeart aria-hidden="true" />
-            <span>Quiero Ayudar (voluntario)</span>
+            <span>Ofrecer ayuda</span>
+          </Link>
+          <Link className="cta" style={{ backgroundColor: "#16a34a", color: "white" }} href="/estoy-a-salvo">
+            <UserRoundCheck aria-hidden="true" />
+            <span>Soy yo, estoy a salvo</span>
           </Link>
         </section>
 
@@ -246,11 +250,11 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
           </Link>
           <Link className="secondary-cta" href="/refugio/solicitar">
             <HomeIcon aria-hidden="true" />
-            <span>Solicitar refugio</span>
+            <span>Necesito refugio</span>
           </Link>
           <Link className="secondary-cta" href="/refugio/ofrecer">
             <HomeIcon aria-hidden="true" />
-            <span>Ofrecer refugio</span>
+            <span>Tengo refugio disponible</span>
           </Link>
         </section>
 
@@ -258,7 +262,7 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
 
         {dataSource !== "db" ? (
           <div className="data-source-note">
-            {dataSource === "loading" ? "Cargando reportes..." : "Mostrando datos de respaldo hasta conectar con la base."}
+            {dataSource === "loading" ? "Cargando reportes..." : "Mostrando datos de respaldo mientras se reconecta la base."}
           </div>
         ) : null}
 
@@ -272,7 +276,7 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
               background: "#f1f5f9",
             }}
           >
-            <strong>{globalStats.open.toLocaleString("es-ES")}</strong><span>Personas reportadas</span>
+            <strong>{globalStats.open.toLocaleString("es-ES")}</strong><span>Reportes recibidos</span>
           </button>
           <button 
             type="button"
@@ -283,7 +287,7 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
               background: "#ffedd5",
             }}
           >
-            <strong style={{ color: "var(--ink)" }}>{globalStats.missing.toLocaleString("es-ES")}</strong><span style={{ color: "var(--ink-soft)" }}>Aún buscados</span>
+            <strong style={{ color: "var(--ink)" }}>{globalStats.missing.toLocaleString("es-ES")}</strong><span style={{ color: "var(--ink-soft)" }}>Aún en búsqueda</span>
           </button>
           <button 
             type="button"
@@ -297,7 +301,7 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
           >
             <strong>{globalStats.resolved.toLocaleString("es-ES")}</strong>
             <span style={{ display: "flex", alignItems: "center", gap: "0.25rem", color: "#16a34a" }}>
-              <CheckCircle2 size={16} /> Localizados a salvo
+              <CheckCircle2 size={16} /> Reencuentros reportados
             </span>
           </button>
           
@@ -313,14 +317,14 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
           >
             <strong>{globalStats.duplicates.toLocaleString("es-ES")}</strong>
             <span style={{ display: "flex", alignItems: "center", gap: "0.25rem", color: "#ea580c" }}>
-              <FileDigit size={16} /> Posibles Duplicados
+              <FileDigit size={16} /> Revisar repetidos
             </span>
           </button>
         </section>
 
         <section className="search-band">
           <label>
-            Buscar por nombre
+            Buscar por nombre o apodo
             <input
               id="search-input"
               className="search-input"
@@ -329,12 +333,12 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
                 setNameQuery(event.target.value);
                 setPage(1);
               }}
-              placeholder="Nombre, apodo o descripcion"
+              placeholder="Ej. Maria, Jose, apodo o seña"
               type="search"
             />
           </label>
           <label>
-            Buscar por zona, edificio, calle, urbanización
+            Buscar por zona, edificio, calle o urbanizacion
             <input
               list="home-venezuela-zones"
               value={zoneQuery}
@@ -342,13 +346,13 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
                 setZoneQuery(event.target.value);
                 setPage(1);
               }}
-              placeholder="Municipio, barrio o referencia"
+              placeholder="Municipio, barrio, refugio o referencia"
               type="search"
             />
           </label>
           <div className="search-actions">
-            <span>{totalItems} resultados en total</span>
-            <Link href="/mapa">Ver mapa filtrable</Link>
+            <span>{totalItems} reportes encontrados</span>
+            <Link href="/mapa">Ver en el mapa</Link>
           </div>
         </section>
         <datalist id="home-venezuela-zones">
@@ -364,8 +368,8 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
         <section className="people-section">
           <div className="section-heading" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             <div>
-              <p className="eyebrow">{viewTab === "personas" ? "Personas reportadas" : viewTab === "mascotas" ? "Mascotas reportadas" : "Solicitudes urgentes"}</p>
-              <h2>{hasSearch ? "Resultados de búsqueda" : viewTab === "personas" ? "Todas las personas reportadas" : viewTab === "mascotas" ? "Mascotas perdidas y encontradas" : "Peticiones de ayuda ciudadana"}</h2>
+              <p className="eyebrow">{viewTab === "personas" ? "Personas y familias" : viewTab === "mascotas" ? "Mascotas reportadas" : "Ayuda solicitada"}</p>
+              <h2>{hasSearch ? "Resultados de búsqueda" : viewTab === "personas" ? "Personas reportadas por la comunidad" : viewTab === "mascotas" ? "Mascotas perdidas y encontradas" : "Solicitudes de ayuda"}</h2>
             </div>
             
             <div style={{ display: "flex", gap: "0.5rem", background: "#f1f5f9", padding: "4px", borderRadius: "8px", alignSelf: "flex-start" }}>
@@ -382,7 +386,7 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
                   boxShadow: viewTab === "personas" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
                 }}
               >
-                Personas desaparecidas
+                Personas
               </button>
               <button
                 onClick={() => { setViewTab("ayuda"); setPage(1); }}
@@ -397,7 +401,7 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
                   boxShadow: viewTab === "ayuda" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
                 }}
               >
-                Peticiones de ayuda
+                Ayuda
               </button>
               <button
                 onClick={() => { setViewTab("mascotas"); setPage(1); }}
@@ -419,7 +423,7 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
           
           {viewTab === "personas" && (
             <div style={{ marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
-              <span style={{ fontSize: "0.9rem", color: "var(--ink-soft)", fontWeight: 500 }}>Filtros:</span>
+              <span style={{ fontSize: "0.9rem", color: "var(--ink-soft)", fontWeight: 500 }}>Ver:</span>
               <button
                 onClick={() => { setStatusFilter(statusFilter === "missing" ? "" : "missing"); setPage(1); }}
                 style={{
@@ -436,7 +440,7 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
                   gap: "0.25rem"
                 }}
               >
-                Aún buscados
+                Aún en búsqueda
               </button>
               <button
                 onClick={() => { setStatusFilter(statusFilter === "resolved" ? "" : "resolved"); setPage(1); }}
@@ -454,17 +458,17 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
                   gap: "0.25rem"
                 }}
               >
-                Localizados a salvo
+                Reencuentros reportados
               </button>
               <span style={{ fontSize: "0.85rem", color: "var(--ink-muted)", fontStyle: "italic", marginLeft: "0.5rem" }}>
-                (Pronto añadiremos por zona o edificio)
+                Puedes combinar estos filtros con nombre o zona.
               </span>
             </div>
           )}
 
           {viewTab === "mascotas" && (
             <div style={{ marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
-              <span style={{ fontSize: "0.9rem", color: "var(--ink-soft)", fontWeight: 500 }}>Filtros:</span>
+              <span style={{ fontSize: "0.9rem", color: "var(--ink-soft)", fontWeight: 500 }}>Ver:</span>
               <button
                 onClick={() => { setStatusFilter(statusFilter === "reported" ? "" : "reported"); setPage(1); }}
                 style={{
@@ -499,7 +503,7 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
                   gap: "0.25rem"
                 }}
               >
-                Mascotas encontradas
+                Mascotas recuperadas
               </button>
             </div>
           )}
@@ -531,7 +535,7 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
               </div>
             </>
           ) : (
-            <div className="empty-state">No hay personas que coincidan con esa busqueda.</div>
+            <div className="empty-state">No encontramos reportes con esos datos. Prueba otro nombre, apodo o zona; a veces los reportes llegan con información incompleta.</div>
           )}
         </section>
       </main>

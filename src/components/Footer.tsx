@@ -14,12 +14,12 @@ export function Footer() {
   return (
     <footer className="site-footer">
       <div className="footer-disclaimer">
-        <strong>Herramienta ciudadana de coordinacion</strong>
+        <strong>Una herramienta ciudadana para acompanarnos</strong>
         <p>
-          Venezuela Juntos centraliza reportes hechos por voluntarios, familiares, amigos y vecinos para facilitar busqueda, verificacion y apoyo comunitario. No sustituye notificaciones oficiales ni la atencion de entes del Estado. Ante riesgo inmediato, llama primero a los servicios oficiales de emergencia.
+          Venezuela Juntos reúne reportes cargados por familiares, amistades, vecinos y voluntarios para facilitar búsqueda, verificación y apoyo comunitario. No sustituye notificaciones oficiales ni la atención de los entes del Estado. Ante riesgo inmediato, llama primero a los servicios de emergencia.
         </p>
       </div>
-      <div className="footer-numbers" aria-label="Telefonos de emergencia">
+      <div className="footer-numbers" aria-label="Teléfonos de emergencia">
         {emergencyNumbers.map((item) => (
           <div key={item.label}>
             <span>{item.label}</span>
@@ -29,7 +29,7 @@ export function Footer() {
       </div>
       <div style={{ textAlign: "center", marginTop: "2rem", padding: "1rem 0", borderTop: "1px solid var(--line)" }}>
         <Link href="/sugerencias" style={{ color: "var(--blue)", fontWeight: 600, textDecoration: "none" }}>
-          ¿Eres de una ONG o tienes una sugerencia? Contáctanos
+          ONG, iglesias, rescatistas y equipos comunitarios: compartan sugerencias o formas de coordinar
         </Link>
       </div>
     </footer>
