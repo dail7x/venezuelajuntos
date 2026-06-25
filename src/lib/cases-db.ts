@@ -519,7 +519,7 @@ export async function createCaseInDb(kind: string, payload: Record<string, unkno
 }
 
 export async function getZoneStats() {
-  const { db } = await getDb();
+  const db = getDb();
   
   const zonesRes = await db.execute({
     sql: `SELECT location_zone, COUNT(*) as total
@@ -540,7 +540,7 @@ export async function getZoneStats() {
     args: []
   });
 
-  const zones = zonesRes.rows.map(r => ({
+  const zones = zonesRes.rows.map((r: Row) => ({
     zone: text(r.location_zone),
     total: number(r.total, 0),
     hotspots: [] as { address: string, count: number }[]
@@ -551,7 +551,7 @@ export async function getZoneStats() {
     const address = text(hotspot.location_normalized);
     const count = number(hotspot.total, 0);
 
-    const zoneObj = zones.find(z => z.zone === zoneName);
+    const zoneObj = zones.find((z) => z.zone === zoneName);
     // Ignore hotspots that are exactly just the zone name (not specific enough)
     if (zoneObj && address && address.toLowerCase() !== zoneName.toLowerCase() && address.length > 5) {
       zoneObj.hotspots.push({ address, count });

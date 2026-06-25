@@ -2,6 +2,8 @@ import { Header } from "@/components/Header";
 import { getZoneStats } from "@/lib/cases-db";
 import { Metadata } from "next";
 
+type ZoneStats = Awaited<ReturnType<typeof getZoneStats>>[number];
+
 export const metadata: Metadata = {
   title: "Inteligencia Zonal | Venezuela Juntos",
   robots: "noindex, nofollow"
@@ -13,10 +15,10 @@ export default async function ZonasDashboard() {
   const zones = await getZoneStats();
 
   // Filter out zones that don't have a valid name or cases
-  const validZones = zones.filter((z: any) => z.zone && z.total > 0 && z.zone !== "Desconocida");
+  const validZones = zones.filter((z: ZoneStats) => z.zone && z.total > 0 && z.zone !== "Desconocida");
   
   // Sort primarily by total cases
-  validZones.sort((a: any, b: any) => b.total - a.total);
+  validZones.sort((a: ZoneStats, b: ZoneStats) => b.total - a.total);
 
   return (
     <>
@@ -35,7 +37,7 @@ export default async function ZonasDashboard() {
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-            {validZones.map((z, i) => (
+            {validZones.map((z: ZoneStats, i: number) => (
               <div key={i} style={{ 
                 background: "var(--card-bg)", 
                 border: "1px solid var(--line)", 
@@ -74,7 +76,7 @@ export default async function ZonasDashboard() {
                   
                   {z.hotspots.length > 0 ? (
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1rem" }}>
-                      {z.hotspots.map((hotspot, j) => (
+                      {z.hotspots.map((hotspot: ZoneStats["hotspots"][number], j: number) => (
                         <div key={j} style={{ 
                           padding: "1rem", 
                           border: "1px solid #fecaca", 
