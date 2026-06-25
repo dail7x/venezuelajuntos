@@ -102,11 +102,11 @@ export async function POST(request: Request) {
         });
       } else {
         // Create a completely new person record
-        const newPersonId = \`p_\${nanoid(16)}\`;
+        const newPersonId = `p_${nanoid(16)}`;
         await db.execute({
-          sql: \`INSERT INTO persons 
+          sql: `INSERT INTO persons 
                 (id, created_at, updated_at, source, full_name, cedula_identidad, age_estimated, status, found_address, photo_url) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\`,
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           args: [
             newPersonId, Date.now(), Date.now(), 
             'hospital_list', fullName, 
