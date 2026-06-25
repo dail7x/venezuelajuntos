@@ -36,7 +36,7 @@ export async function POST(request: Request) {
 
         try {
           res = await fetch(
-            `https://desaparecidos-terremoto-api.theempire.tech/api/personas?pageSize=${pageSize}&page=${page}&estado=localizado`,
+            `https://desaparecidos-terremoto-api.theempire.tech/api/personas?pageSize=${pageSize}&page=${page}&estado=localizado&sortBy=updatedAt&order=desc`,
             { signal: controller.signal }
           );
           clearTimeout(timeoutId);

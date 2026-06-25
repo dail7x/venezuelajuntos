@@ -222,7 +222,7 @@ export async function getPublicCasesFromDb(page = 1, limit = 100, query = "", zo
              COALESCE(physical_desc, clothing_desc) as search_desc,
              status,
              potential_duplicate_of
-      FROM persons WHERE is_deleted = 0 ${hasUpdates ? "AND EXISTS (SELECT 1 FROM person_notes WHERE person_id = persons.id)" : ""}
+      FROM persons WHERE is_deleted = 0 ${hasUpdates ? "AND (EXISTS (SELECT 1 FROM person_notes WHERE person_id = persons.id) OR EXISTS (SELECT 1 FROM persons p2 WHERE p2.potential_duplicate_of = persons.id) OR found_notes IS NOT NULL)" : ""}
       UNION ALL
       SELECT id, 'request' as type, updated_at,
              COALESCE(title, request_type) as title_or_name,
