@@ -29,9 +29,9 @@ export async function POST(request: Request) {
 
   try {
     while (hasMore) { 
-      // Respectful delay between pages to avoid rate-limiting or crashing the target API
+      // Very small delay to respect API but maximize speed (100ms instead of 2s)
       if (page > 1) {
-        await delay(2000); 
+        await delay(100); 
       }
 
       let res;
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
           if (!res.ok) {
             console.error(`Failed to fetch external API page ${page}: ${res.statusText}`);
             retryCount++;
-            await delay(5000); // wait longer before retry
+            await delay(1000); // 1s retry
             continue;
           }
           
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
         } catch (err: any) {
           console.error(`Fetch error on page ${page}:`, err.message);
           retryCount++;
-          await delay(5000); // Wait 5s before retrying
+          await delay(1000); // Wait 1s before retrying
         }
       }
 
@@ -96,6 +96,18 @@ export async function POST(request: Request) {
         const physical_desc = p.descripcion || null;
         const photo_url = p.foto || null;
         const author_contact = p.contacto || null;
+
+        // Anti-Spam Filter
+        const spamPattern = /infinityhotel\.it|casino|viagra|porn|seo services/i;
+        const nameUrlPattern = /http:|https:|www\./i;
+        
+        if (
+          spamPattern.test(full_name) || spamPattern.test(last_seen_address) || spamPattern.test(physical_desc || '') ||
+          nameUrlPattern.test(full_name)
+        ) {
+          console.log(`Skipping SPAM record from API: ${id} - ${full_name}`);
+          continue; // Skip processing this record entirely
+        }
 
         // Check if case already exists to see if we need AI normalization
         const existingRes = await db.execute({
