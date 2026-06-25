@@ -43,7 +43,7 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
   const [activeModal] = useState<string | null>(defaultModal);
   const [globalStats, setGlobalStats] = useState({ open: 0, missing: 0, resolved: 0, duplicates: 0 });
   const [statusFilter, setStatusFilter] = useState("");
-  const [viewTab, setViewTab] = useState<"personas" | "ayuda">("personas");
+  const [viewTab, setViewTab] = useState<"personas" | "ayuda" | "mascotas">("personas");
 
   useEffect(() => {
     fetch("/api/stats")

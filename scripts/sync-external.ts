@@ -7,7 +7,7 @@ const db = createClient({
 
 async function syncExternal() {
   let page = 1;
-  const pageSize = 100;
+  const pageSize = 500;
   let hasMore = true;
 
   console.log("Starting sync with external API...");
