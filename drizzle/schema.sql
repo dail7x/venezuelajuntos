@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS persons (
   clothing_desc TEXT,
   photo_url TEXT,
   last_seen_address TEXT,
+  location_zone TEXT,
+  location_normalized TEXT,
   last_seen_lat REAL,
   last_seen_lng REAL,
   last_seen_at INTEGER,

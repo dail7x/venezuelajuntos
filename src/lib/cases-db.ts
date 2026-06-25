@@ -63,7 +63,8 @@ function signals() {
 function mapPerson(row: Row): PublicCase {
   const name = text(row.full_name, "Nombre por confirmar");
   const status = personStatus(text(row.status, "missing"));
-  const zone = text(row.last_seen_address || row.found_address, "Zona por confirmar");
+  const zone = text(row.location_zone, text(row.last_seen_address || row.found_address, "Zona por confirmar"));
+  const publicAddress = text(row.location_normalized, text(row.last_seen_address || row.found_address, "Zona por confirmar"));
 
   return {
     id: text(row.id),
@@ -74,7 +75,7 @@ function mapPerson(row: Row): PublicCase {
     age: typeof row.age_estimated === "number" ? row.age_estimated : undefined,
     status,
     zone,
-    publicAddress: zone,
+    publicAddress,
     lat: number(row.last_seen_lat || row.found_lat, 10.4806),
     lng: number(row.last_seen_lng || row.found_lng, -66.9036),
     createdAt: dateIso(row.created_at),
@@ -204,7 +205,7 @@ export async function getPublicCasesFromDb(page = 1, limit = 100, query = "", zo
     SELECT * FROM (
       SELECT id, 'person' as type, updated_at,
              full_name as title_or_name,
-             COALESCE(last_seen_address, found_address) as zone_or_address,
+             COALESCE(location_zone, last_seen_address, found_address) as zone_or_address,
              COALESCE(physical_desc, found_notes, clothing_desc) as search_desc,
              status
       FROM persons WHERE is_deleted = 0

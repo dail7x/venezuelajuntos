@@ -49,7 +49,7 @@ export function CaseCard({ item, onOpen }: { item: PublicCase; onOpen?: (item: P
       </div>
       <h3 style={{ margin: "0 0 8px 0" }}>{item.title}</h3>
       <p style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'var(--wash)', padding: '4px 8px', borderRadius: '6px', fontSize: '0.85rem', color: 'var(--ink-soft)', margin: 0 }}>
-        <MapPin size={14} /> {item.zone}
+        <MapPin size={14} /> {item.publicAddress}
       </p>
       {item.sourceDomain && (
         <div style={{ marginTop: "1rem", fontSize: "0.85rem", color: "#5b6b7b", borderTop: "1px solid #e6ecf2", paddingTop: "0.5rem" }}>

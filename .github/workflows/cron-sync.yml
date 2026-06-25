@@ -1,0 +1,15 @@
+name: Cron Sync External API
+
+on:
+  schedule:
+    - cron: '*/30 * * * *' # Run every 30 minutes
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hit Sync Endpoint
+        run: |
+          curl -fsS -X POST "https://venezuelajuntos.online/api/cron/sync-external" \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
