@@ -173,6 +173,44 @@ export function ReportForm({
     );
   }
 
+  function resetForm() {
+    setState("idle");
+    setPhotoDataUrl("");
+    setPhotoName("");
+    setGpsLocation(null);
+    setGpsStatus("idle");
+    setDuplicateWarning(null);
+  }
+
+  if (state === "saved") {
+    return (
+      <div className="report-shell" style={{ padding: "4rem 2rem", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <button 
+          type="button" 
+          onClick={closePopup} 
+          style={{ position: "absolute", top: "20px", right: "20px", background: "none", border: "none", fontSize: "1.5rem", cursor: "pointer", color: "var(--ink-soft)" }}
+          aria-label="Cerrar"
+        >
+          x
+        </button>
+        <div style={{ background: "#dcfce7", color: "#166534", width: "80px", height: "80px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2.5rem", marginBottom: "1.5rem" }}>✓</div>
+        <h2 style={{ fontSize: "1.8rem", color: "#166534", marginBottom: "0.5rem" }}>Reporte recibido</h2>
+        <p style={{ fontSize: "1.1rem", color: "#1e293b", marginBottom: "2rem", maxWidth: "450px", lineHeight: 1.6 }}>
+          <strong>Queda pendiente de verificación.</strong><br/><br/>
+          Agradecemos de todo corazón tu reporte. Cada dato cuenta y mantiene viva la esperanza.
+        </p>
+        <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", justifyContent: "center" }}>
+          <button type="button" onClick={closePopup} style={{ background: "white", color: "var(--brand)", border: "1px solid var(--brand)", padding: "12px 24px", borderRadius: "8px", fontWeight: "bold", cursor: "pointer", fontSize: "1rem" }}>
+            Cerrar
+          </button>
+          <button type="button" onClick={resetForm} style={{ background: "var(--brand)", color: "white", padding: "12px 24px", borderRadius: "8px", fontWeight: "bold", border: "none", cursor: "pointer", fontSize: "1rem" }}>
+            Reportar otro ser querido
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <form className="report-shell" onSubmit={onSubmit}>
       <div className="form-heading">
@@ -303,32 +341,6 @@ export function ReportForm({
       </footer>
       {state === "error" ? <p className="error">No pudimos guardar el reporte. Revisa tu conexión e intenta de nuevo; si es urgente, llama primero a los servicios oficiales.</p> : null}
 
-      {state === "saved" && (
-        <div 
-          onClick={closePopup}
-          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(255,255,255,0.95)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem", textAlign: "center", zIndex: 100, borderRadius: "20px", cursor: "pointer" }}
-        >
-          <div onClick={(e) => e.stopPropagation()} style={{ cursor: "default", display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <button 
-              type="button" 
-              onClick={closePopup} 
-              style={{ position: "absolute", top: "20px", right: "20px", background: "none", border: "none", fontSize: "1.5rem", cursor: "pointer", color: "var(--ink-soft)" }}
-              aria-label="Cerrar"
-            >
-              x
-            </button>
-            <div style={{ background: "#dcfce7", color: "#166534", width: "64px", height: "64px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2rem", marginBottom: "1.5rem" }}>✓</div>
-            <h2 style={{ fontSize: "1.5rem", color: "#166534", marginBottom: "0.5rem" }}>Reporte recibido</h2>
-            <p style={{ fontSize: "1rem", color: "#1e293b", marginBottom: "1.5rem", maxWidth: "400px", lineHeight: 1.5 }}>
-              <strong>Queda pendiente de verificación y posible deduplicación.</strong><br/><br/>
-              Agradecemos de todo corazón tu reporte. Cada dato cuenta y mantiene viva la esperanza. Oramos para que esta persona aparezca pronto, sana y salva.
-            </p>
-            <button type="button" onClick={closePopup} style={{ background: "var(--brand)", color: "white", padding: "12px 24px", borderRadius: "8px", fontWeight: "bold", border: "none", cursor: "pointer", fontSize: "1rem" }}>
-              {wasAccompanied ? "Continuar con el acompañante" : "Volver al inicio"}
-            </button>
-          </div>
-        </div>
-      )}
     </form>
   );
 }
