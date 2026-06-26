@@ -481,6 +481,7 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
                   alignItems: "center",
                   gap: "0.25rem"
                 }}
+              >
                 Reencuentros reportados
               </button>
               <button
