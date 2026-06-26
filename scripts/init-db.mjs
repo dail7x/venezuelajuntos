@@ -1,4 +1,6 @@
 import { createClient } from "@libsql/client";
+import * as fs from "node:fs";
+import * as path from "node:path";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
@@ -25,13 +27,26 @@ function splitSql(sql) {
 loadLocalEnv();
 
 const url = process.env.DATABASE_URL;
-const authToken = process.env.TURSO_AUTH_TOKEN;
 
-if (!url || !authToken) {
-  throw new Error("DATABASE_URL and TURSO_AUTH_TOKEN are required");
+if (!url) {
+  throw new Error("DATABASE_URL is required");
 }
 
-const client = createClient({ url, authToken });
+let client;
+if (url.startsWith("file:")) {
+  const filePath = url.replace("file:", "");
+  const dir = path.dirname(filePath);
+  if (dir && !fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  client = createClient({ url });
+} else {
+  const authToken = process.env.TURSO_AUTH_TOKEN;
+  if (!authToken) {
+    throw new Error("TURSO_AUTH_TOKEN is required for remote database");
+  }
+  client = createClient({ url, authToken });
+}
 const schema = readFileSync(resolve(process.cwd(), "drizzle/schema.sql"), "utf8");
 
 for (const statement of splitSql(schema)) {
