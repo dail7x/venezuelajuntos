@@ -215,6 +215,13 @@ export async function getPublicCasesFromDb(page = 1, limit = 100, query = "", zo
   const db = getDb();
   const offset = (page - 1) * limit;
 
+  let statusCond = "";
+  if (status && status !== "hospital" && status !== "resolved") {
+    statusCond = `AND status = '${status}'`;
+  } else if (status === "hospital") {
+    statusCond = `AND (EXISTS (SELECT 1 FROM person_notes WHERE person_id = persons.id AND source = 'hospital_list') OR found_notes LIKE '%hospital%')`;
+  }
+
   const sqlBase = `
     SELECT * FROM (
       SELECT id, 'person' as type, updated_at,
@@ -279,12 +286,7 @@ export async function getPublicCasesFromDb(page = 1, limit = 100, query = "", zo
     args.push(`%${zoneQ}%`);
   }
   
-  let statusCond = "";
-  if (status && status !== "hospital") {
-    statusCond = `AND status = '${status}'`;
-  } else if (status === "hospital") {
-    statusCond = `AND (EXISTS (SELECT 1 FROM person_notes WHERE person_id = persons.id AND source = 'hospital_list') OR found_notes LIKE '%hospital%')`;
-  } else if (status === "resolved") {
+  if (status === "resolved") {
     conditions += ` AND status IN ('located', 'reunified', 'resolved', 'closed')`;
   }
 
