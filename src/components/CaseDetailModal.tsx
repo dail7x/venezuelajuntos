@@ -50,6 +50,8 @@ export function CaseDetailModal({
   const [editError, setEditError] = useState("");
   const [noteError, setNoteError] = useState("");
 
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
+
   const [showLocatedForm, setShowLocatedForm] = useState(false);
   const [showRevertForm, setShowRevertForm] = useState(false);
   const [statusFormName, setStatusFormName] = useState("");
@@ -307,21 +309,49 @@ export function CaseDetailModal({
                 : (item.status === 'located' || item.status === 'reunified' ? 'Localizada' : 'En búsqueda')}
             </span>
           )}
-          {item.photoUrl ? (
-            item.photoUrl.includes(',') ? (
-              <div style={{ display: 'flex', overflowX: 'auto', gap: '4px', width: '100%', scrollbarWidth: 'none', scrollSnapType: 'x mandatory' }}>
-                {item.photoUrl.split(',').filter(Boolean).map((url, idx) => (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img key={idx} alt={`Foto de ${item.title} ${idx+1}`} src={url} style={{ flex: '0 0 100%', scrollSnapAlign: 'center', objectFit: 'cover' }} />
-                ))}
-              </div>
-            ) : (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img alt={`Foto de ${item.title}`} src={item.photoUrl} />
-            )
-          ) : (
-            <div className="image-placeholder">Sin foto pública</div>
-          )}
+          {(() => {
+            const uniquePhotos = new Set<string>();
+            if (item.photoUrl) item.photoUrl.split(',').filter(Boolean).forEach(p => uniquePhotos.add(p));
+            if (item.duplicates) {
+              item.duplicates.forEach(d => {
+                if (d.photoUrl) d.photoUrl.split(',').filter(Boolean).forEach(p => uniquePhotos.add(p));
+              });
+            }
+            const allPhotos = Array.from(uniquePhotos);
+            
+            if (allPhotos.length > 0) {
+              const activePhoto = allPhotos[selectedPhotoIndex] || allPhotos[0];
+              return (
+                <div style={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img alt={`Foto principal de ${item.title}`} src={activePhoto} style={{ width: '100%', objectFit: 'cover' }} />
+                  {allPhotos.length > 1 && (
+                    <div style={{ display: 'flex', gap: '8px', padding: '8px', overflowX: 'auto', background: 'rgba(0,0,0,0.7)', scrollbarWidth: 'none' }}>
+                      {allPhotos.map((url, idx) => (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img 
+                          key={idx} 
+                          src={url} 
+                          alt={`Miniatura ${idx+1}`} 
+                          onClick={() => setSelectedPhotoIndex(idx)}
+                          style={{ 
+                            width: '60px', 
+                            height: '60px', 
+                            objectFit: 'cover', 
+                            borderRadius: '4px', 
+                            border: selectedPhotoIndex === idx ? '2px solid white' : '2px solid transparent',
+                            cursor: 'pointer',
+                            opacity: selectedPhotoIndex === idx ? 1 : 0.6
+                          }} 
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+            return <div className="image-placeholder">Sin foto pública</div>;
+          })()}
         </div>
 
         <div className="case-modal-body">
@@ -638,7 +668,7 @@ export function CaseDetailModal({
                               {new Date(note.createdAt).toLocaleString("es-VE", { dateStyle: "short", timeStyle: "short" })}
                             </span>
                           </div>
-                          <p className="update-text">{note.text}</p>
+                          <p className="update-text" dangerouslySetInnerHTML={{ __html: note.text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color: #2563a8; text-decoration: underline;">$1</a>').replace(/\n/g, '<br/>') }} />
                         </div>
                       ))}
                     </div>

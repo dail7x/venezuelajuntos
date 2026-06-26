@@ -70,6 +70,10 @@ export async function POST(request: Request) {
       let pageHasUpdates = false;
 
       for (const p of items) {
+        if (p.estado && p.estado.toLowerCase() !== 'localizado') {
+          continue;
+        }
+
         const id = `ext-${p.id}`;
         
         // Find if we have this person as missing
@@ -117,6 +121,12 @@ Nota original: ${p.localizadoNota || ''}`.trim();
 
           // Add a community note if they just transitioned from missing to located
           if (existingRow.status === 'missing') {
+            const noteText = p.localizadoNota 
+              ? p.localizadoNota 
+              : (p.localizadoContacto 
+                  ? `Contacto del reporte: ${p.localizadoContacto}` 
+                  : 'Reporte confirmado como localizado.');
+
             await db.execute({
               sql: `INSERT INTO person_notes (id, person_id, created_at, source, author_name, author_contact, text) 
                     VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -127,7 +137,7 @@ Nota original: ${p.localizadoNota || ''}`.trim();
                 'community_update', 
                 p.localizadoPor || 'Sistema', 
                 p.localizadoContacto || '', 
-                `Reportado como LOCALIZADO desde la base de datos externa.\nNota original: ${p.localizadoNota || ''}`
+                noteText
               ]
             });
             totalUpdated++;
