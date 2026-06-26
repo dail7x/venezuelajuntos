@@ -228,7 +228,6 @@ export async function getPublicCasesFromDb(page = 1, limit = 100, query = "", zo
              full_name as title_or_name,
              COALESCE(location_zone, last_seen_address, found_address) as zone_or_address,
              COALESCE(physical_desc, clothing_desc) as search_desc,
-             COALESCE(physical_desc, clothing_desc) as search_desc,
              status,
              potential_duplicate_of,
              (SELECT 1 FROM person_notes WHERE person_id = persons.id AND source = 'hospital_list' LIMIT 1) as in_hospital_list
