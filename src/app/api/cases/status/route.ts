@@ -17,24 +17,12 @@ export async function POST(request: Request) {
     const now = Date.now();
     const noteId = nanoid(10);
 
-    const transactionSql = `
-      BEGIN TRANSACTION;
-      UPDATE persons SET status = ?, updated_at = ? WHERE id = ?;
-      INSERT INTO person_notes (id, person_id, created_at, source, author_name, author_contact, author_role, note_status, text) 
-      VALUES (?, ?, ?, 'web_form', ?, ?, 'user', ?, ?);
-      COMMIT;
-    `;
-
-    // SQLite/Turso doesn't support multiple statements in a single execute string well,
-    // so we execute them sequentially or use a transaction.
-    await db.execute({ sql: "BEGIN TRANSACTION", args: [] });
-
-    await db.execute({
+    const tx1 = {
       sql: "UPDATE persons SET status = ?, updated_at = ? WHERE id = ?",
       args: [body.status, now, body.caseId],
-    });
+    };
 
-    await db.execute({
+    const tx2 = {
       sql: `INSERT INTO person_notes (
         id, person_id, created_at, source, author_name, author_contact, author_role, note_status, text
       ) VALUES (?, ?, ?, 'web_form', ?, ?, 'user', ?, ?)`,
@@ -47,17 +35,18 @@ export async function POST(request: Request) {
         body.status,
         body.text.trim(),
       ],
-    });
+    };
 
-    await db.execute({ sql: "COMMIT", args: [] });
+    if (typeof db.batch === "function") {
+      await db.batch([tx1, tx2], "write");
+    } else {
+      await db.execute(tx1);
+      await db.execute(tx2);
+    }
 
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Failed to update status", error);
-    try {
-      const db = getDb();
-      await db.execute({ sql: "ROLLBACK", args: [] });
-    } catch (e) {}
-    return NextResponse.json({ error: "db_update_failed" }, { status: 500 });
+    return NextResponse.json({ error: "internal_error" }, { status: 500 });
   }
 }
