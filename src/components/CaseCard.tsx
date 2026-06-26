@@ -43,6 +43,12 @@ export function CaseCard({ item, onOpen }: { item: PublicCase; onOpen?: (item: P
         ) : (
           <span style={{ fontSize: "3rem", fontWeight: "bold", color: "#94a3b8" }}>{getInitials(item.title)}</span>
         )}
+        
+        {(item.inHospitalList || (item.foundNotes && item.foundNotes.toLowerCase().includes("hospital"))) && (
+          <div style={{ position: "absolute", top: "8px", left: "8px", padding: "4px 10px", borderRadius: "999px", fontSize: "0.75rem", fontWeight: "bold", background: "#0ea5e9", color: "white", display: "flex", alignItems: "center", gap: "4px", zIndex: 2, boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }}>
+            🏥 En lista de hospital
+          </div>
+        )}
         <div style={{ position: "absolute", top: "10px", right: "10px" }}>
           <span className="pill" style={pillStyle}>{pillContent}</span>
         </div>

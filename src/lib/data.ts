@@ -51,6 +51,7 @@ export type PublicCase = {
   sourceUrl?: string;
   potentialDuplicateOf?: string;
   duplicates?: PublicCase[];
+  inHospitalList?: boolean;
 };
 
 export const statusLabels: Record<CaseStatus, string> = {

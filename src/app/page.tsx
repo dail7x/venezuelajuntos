@@ -80,7 +80,7 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
     return () => {
       cancelled = true;
     };
-  }, [page, debouncedNameQuery, debouncedZoneQuery, statusFilter]);
+  }, [page, debouncedNameQuery, debouncedZoneQuery, statusFilter, hasUpdatesFilter]);
 
   const refreshCases = useCallback(() => {
     const url = new URL("/api/cases", window.location.href);
@@ -481,8 +481,25 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
                   alignItems: "center",
                   gap: "0.25rem"
                 }}
-              >
                 Reencuentros reportados
+              </button>
+              <button
+                onClick={() => { setStatusFilter(statusFilter === "hospital" ? "" : "hospital"); setPage(1); }}
+                style={{
+                  padding: "4px 12px",
+                  borderRadius: "999px",
+                  border: `1px solid ${statusFilter === "hospital" ? "#0284c7" : "#bae6fd"}`,
+                  background: statusFilter === "hospital" ? "#e0f2fe" : "white",
+                  color: statusFilter === "hospital" ? "#0369a1" : "#0284c7",
+                  fontSize: "0.85rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.25rem"
+                }}
+              >
+                Encontrado en lista de hospital
               </button>
               <span style={{ fontSize: "0.85rem", color: "var(--ink-muted)", fontStyle: "italic", marginLeft: "0.5rem" }}>
                 Puedes combinar estos filtros con nombre o zona.

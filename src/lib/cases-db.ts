@@ -92,6 +92,7 @@ function mapPerson(row: Row): PublicCase {
     sensitiveHidden: true,
     needs: status === "missing" ? ["Información confirmada", "Cruce con personas localizadas"] : ["Verificación familiar"],
     potentialDuplicateOf: text(row.potential_duplicate_of) || undefined,
+    inHospitalList: !!row.in_hospital_list,
   };
 }
 
@@ -220,16 +221,19 @@ export async function getPublicCasesFromDb(page = 1, limit = 100, query = "", zo
              full_name as title_or_name,
              COALESCE(location_zone, last_seen_address, found_address) as zone_or_address,
              COALESCE(physical_desc, clothing_desc) as search_desc,
+             COALESCE(physical_desc, clothing_desc) as search_desc,
              status,
-             potential_duplicate_of
-      FROM persons WHERE is_deleted = 0 ${hasUpdates ? "AND (EXISTS (SELECT 1 FROM person_notes WHERE person_id = persons.id) OR EXISTS (SELECT 1 FROM persons p2 WHERE p2.potential_duplicate_of = persons.id) OR found_notes IS NOT NULL)" : ""}
+             potential_duplicate_of,
+             (SELECT 1 FROM person_notes WHERE person_id = persons.id AND source = 'hospital_list' LIMIT 1) as in_hospital_list
+      FROM persons WHERE is_deleted = 0 ${hasUpdates ? "AND (EXISTS (SELECT 1 FROM person_notes WHERE person_id = persons.id) OR EXISTS (SELECT 1 FROM persons p2 WHERE p2.potential_duplicate_of = persons.id) OR found_notes IS NOT NULL)" : ""} ${statusCond}
       UNION ALL
       SELECT id, 'request' as type, updated_at,
              COALESCE(title, request_type) as title_or_name,
              address as zone_or_address,
              description as search_desc,
              status,
-             NULL as potential_duplicate_of
+             NULL as potential_duplicate_of,
+             NULL as in_hospital_list
       FROM help_requests WHERE is_deleted = 0 ${hasUpdates ? "AND 1=0" : ""}
       UNION ALL
       SELECT id, 'zone' as type, updated_at,
@@ -237,7 +241,8 @@ export async function getPublicCasesFromDb(page = 1, limit = 100, query = "", zo
              address as zone_or_address,
              description as search_desc,
              status,
-             NULL as potential_duplicate_of
+             NULL as potential_duplicate_of,
+             NULL as in_hospital_list
       FROM rescue_zones WHERE is_deleted = 0 ${hasUpdates ? "AND 1=0" : ""}
       UNION ALL
       SELECT id, 'pet' as type, updated_at,
@@ -245,7 +250,8 @@ export async function getPublicCasesFromDb(page = 1, limit = 100, query = "", zo
              zone as zone_or_address,
              description as search_desc,
              status,
-             NULL as potential_duplicate_of
+             NULL as potential_duplicate_of,
+             NULL as in_hospital_list
       FROM pet_reports WHERE is_deleted = 0 ${hasUpdates ? "AND 1=0" : ""}
       UNION ALL
       SELECT id, 'shelter' as type, updated_at,
@@ -253,7 +259,8 @@ export async function getPublicCasesFromDb(page = 1, limit = 100, query = "", zo
              zone as zone_or_address,
              description as search_desc,
              'reported' as status,
-             NULL as potential_duplicate_of
+             NULL as potential_duplicate_of,
+             NULL as in_hospital_list
       FROM shelter_reports WHERE is_deleted = 0 ${hasUpdates ? "AND 1=0" : ""}
     ) unified
     WHERE 1=1
@@ -272,13 +279,15 @@ export async function getPublicCasesFromDb(page = 1, limit = 100, query = "", zo
     args.push(`%${zoneQ}%`);
   }
   
-  if (status === "missing") {
-    conditions += ` AND status = 'missing'`;
+  let statusCond = "";
+  if (status && status !== "hospital") {
+    statusCond = `AND status = '${status}'`;
+  } else if (status === "hospital") {
+    statusCond = `AND (EXISTS (SELECT 1 FROM person_notes WHERE person_id = persons.id AND source = 'hospital_list') OR found_notes LIKE '%hospital%')`;
   } else if (status === "resolved") {
     conditions += ` AND status IN ('located', 'reunified', 'resolved', 'closed')`;
   }
 
-  const countSql = `SELECT count(*) as total FROM (${sqlBase} ${conditions}) c`;
   const resultSql = `${sqlBase} ${conditions} ORDER BY updated_at DESC LIMIT ? OFFSET ?`;
   
   const countArgs = [...args];
