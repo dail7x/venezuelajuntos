@@ -289,7 +289,7 @@ export async function getPublicCasesFromDb(page = 1, limit = 100, query = "", zo
   if (status === "resolved") {
     conditions += ` AND status IN ('located', 'reunified', 'resolved', 'closed')`;
   }
-
+  const countSql = `SELECT count(*) as total FROM (${sqlBase} ${conditions}) c`;
   const resultSql = `${sqlBase} ${conditions} ORDER BY updated_at DESC LIMIT ? OFFSET ?`;
   
   const countArgs = [...args];
