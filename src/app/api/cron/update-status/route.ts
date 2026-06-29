@@ -78,7 +78,7 @@ export async function POST(request: Request) {
         
         // Find if we have this person as missing
         const existingRes = await db.execute({
-          sql: `SELECT id, status, updated_at FROM persons WHERE id = ?`,
+          sql: `SELECT id, estado_actual, actualizado_en FROM personas WHERE id = ?`,
           args: [id]
         });
         
@@ -89,15 +89,15 @@ export async function POST(request: Request) {
           continue;
         }
         
-        // If it's already located in our DB and updated_at matches, skip.
+        // If it's already located in our DB and actualizado_en matches, skip.
         // Or if we already processed this localization.
-        if (existingRow.status === 'located' && Number(existingRow.updated_at) >= Number(p.updatedAt)) {
+        if (existingRow.estado_actual === 'located' && Number(existingRow.actualizado_en) >= Number(p.updatedAt)) {
           continue; 
         }
 
         pageHasUpdates = true;
 
-        if (existingRow.status !== 'located' || Number(existingRow.updated_at) < Number(p.updatedAt)) {
+        if (existingRow.estado_actual !== 'located' || Number(existingRow.actualizado_en) < Number(p.updatedAt)) {
           const finderInfo = `Reportado por: ${p.localizadoPor || 'Desconocido'} 
 Contacto: ${p.localizadoContacto || 'N/A'}
 Relación: ${p.localizadoRelacion || 'N/A'}
@@ -105,11 +105,11 @@ Nota original: ${p.localizadoNota || ''}`.trim();
 
           // Update person status
           await db.execute({
-            sql: `UPDATE persons SET 
-                  status = 'located', 
-                  updated_at = ?,
-                  found_at = ?,
-                  found_notes = ?
+            sql: `UPDATE personas SET 
+                  estado_actual = 'located', 
+                  actualizado_en = ?,
+                  encontrado_en = ?,
+                  notas_hallazgo = ?
                   WHERE id = ?`,
             args: [
               p.updatedAt || Date.now(), 
@@ -120,7 +120,7 @@ Nota original: ${p.localizadoNota || ''}`.trim();
           });
 
           // Add a community note if they just transitioned from missing to located
-          if (existingRow.status === 'missing') {
+          if (existingRow.estado_actual === 'missing') {
             const noteText = p.localizadoNota 
               ? p.localizadoNota 
               : (p.localizadoContacto 
@@ -128,7 +128,7 @@ Nota original: ${p.localizadoNota || ''}`.trim();
                   : 'Reporte confirmado como localizado.');
 
             await db.execute({
-              sql: `INSERT INTO person_notes (id, person_id, created_at, source, author_name, author_contact, text) 
+              sql: `INSERT INTO notas_persona (id, person_id, creado_en, source, nombre_reportante, contacto_reportante, text) 
                     VALUES (?, ?, ?, ?, ?, ?, ?)`,
               args: [
                 `pn_${nanoid(10)}`, 

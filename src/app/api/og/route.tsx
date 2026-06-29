@@ -70,7 +70,7 @@ export async function GET(request: Request) {
               position: "absolute",
               top: isStory ? "40px" : "30px",
               left: isStory ? "40px" : "30px",
-              backgroundColor: item.status === "missing" ? "#dc2626" : item.status === "located" || item.status === "reunified" ? "#16a34a" : "#ca8a04",
+              backgroundColor: item.estado_actual === "missing" ? "#dc2626" : item.estado_actual === "located" || item.estado_actual === "reunified" ? "#16a34a" : "#ca8a04",
               color: "white",
               padding: "12px 24px",
               borderRadius: "8px",
@@ -80,7 +80,7 @@ export async function GET(request: Request) {
               letterSpacing: "0.05em",
               boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
             }}>
-              {statusLabels[item.status] || "Reportado"}
+              {statusLabels[item.estado_actual] || "Reportado"}
             </div>
           </div>
 

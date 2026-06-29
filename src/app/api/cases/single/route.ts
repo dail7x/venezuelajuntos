@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   try {
     const db = getDb();
     const res = await db.execute({
-      sql: `SELECT * FROM persons WHERE id = ?`,
+      sql: `SELECT * FROM personas WHERE id = ?`,
       args: [id]
     });
     
@@ -23,11 +23,11 @@ export async function GET(request: Request) {
     // Very simple mapping for the side-by-side view
     return NextResponse.json({
       id: row.id,
-      title: row.full_name || "Desconocido",
-      zone: row.location_zone || row.last_seen_address || "Desconocida",
-      description: row.physical_desc || "",
-      photoUrl: row.photo_url || null,
-      status: row.status,
+      title: row.nombre_completo || "Desconocido",
+      zone: row.zona_ubicacion || row.ultima_direccion_conocida || "Desconocida",
+      description: row.descripcion_fisica || "",
+      photoUrl: row.url_foto || null,
+      status: row.estado_actual,
     });
   } catch (err) {
     console.error(err);

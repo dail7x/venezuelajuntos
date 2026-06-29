@@ -14,10 +14,10 @@ async function runBackfill() {
     authToken: process.env.TURSO_AUTH_TOKEN,
   });
 
-  console.log("Fetching persons without normalized locations...");
+  console.log("Fetching personas without normalized locations...");
   
   const res = await client.execute({
-    sql: `SELECT id, last_seen_address FROM persons WHERE location_normalized IS NULL AND last_seen_address != 'Desconocida' AND is_deleted = 0`,
+    sql: `SELECT id, ultima_direccion_conocida FROM personas WHERE ubicacion_normalizada IS NULL AND ultima_direccion_conocida != 'Desconocida' AND esta_eliminado = 0`,
     args: []
   });
   
@@ -27,18 +27,18 @@ async function runBackfill() {
   
   for (let i = 0; i < res.rows.length; i++) {
     const row = res.rows[i];
-    console.log(`Processing ${i + 1}/${res.rows.length}: ${row.last_seen_address}`);
+    console.log(`Processing ${i + 1}/${res.rows.length}: ${row.ultima_direccion_conocida}`);
     
     try {
-      const aiResult = await normalizeAddressWithAI(String(row.last_seen_address));
+      const aiResult = await normalizeAddressWithAI(String(row.ultima_direccion_conocida));
       
-      if (aiResult.location_normalized) {
+      if (aiResult.ubicacion_normalizada) {
         await client.execute({
-          sql: `UPDATE persons SET location_zone = COALESCE(?, location_zone), location_normalized = ? WHERE id = ?`,
-          args: [aiResult.location_zone, aiResult.location_normalized, row.id]
+          sql: `UPDATE personas SET zona_ubicacion = COALESCE(?, zona_ubicacion), ubicacion_normalizada = ? WHERE id = ?`,
+          args: [aiResult.zona_ubicacion, aiResult.ubicacion_normalizada, row.id]
         });
         successCount++;
-        console.log(`  -> Normalized to: ${aiResult.location_normalized}`);
+        console.log(`  -> Normalized to: ${aiResult.ubicacion_normalizada}`);
       } else {
         console.log(`  -> AI failed to normalize.`);
       }

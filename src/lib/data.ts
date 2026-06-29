@@ -24,7 +24,7 @@ export type PublicCase = {
   cedula?: number;
   age?: number;
 
-  status: CaseStatus;
+  estado_actual: CaseStatus;
   zone: string;
   publicAddress: string;
   lat: number;
@@ -91,9 +91,9 @@ export function getCase(idOrSlug: string) {
 
 export function getStats(cases = seedCases) {
   return {
-    open: cases.filter((item) => !["resolved", "closed", "reunified", "duplicate"].includes(item.status)).length,
-    resolved: cases.filter((item) => ["resolved", "closed", "reunified", "located"].includes(item.status)).length,
-    missing: cases.filter((item) => item.kind === "missing" && item.status === "missing").length,
+    open: cases.filter((item) => !["resolved", "closed", "reunified", "duplicate"].includes(item.estado_actual)).length,
+    resolved: cases.filter((item) => ["resolved", "closed", "reunified", "located"].includes(item.estado_actual)).length,
+    missing: cases.filter((item) => item.kind === "missing" && item.estado_actual === "missing").length,
   };
 }
 
@@ -106,7 +106,7 @@ export function publicGeoJson(cases = seedCases) {
         id: item.id,
         kind: item.kind,
         title: item.title,
-        status: item.status,
+        status: item.estado_actual,
         zone: item.zone,
         url: `/casos/${item.slug}`,
       },

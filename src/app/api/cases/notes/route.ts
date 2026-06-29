@@ -17,17 +17,17 @@ export async function GET(request: Request) {
   try {
     const db = getDb();
     const result = await db.execute({
-      sql: "SELECT * FROM person_notes WHERE person_id = ? ORDER BY created_at DESC",
+      sql: "SELECT * FROM notas_persona WHERE person_id = ? ORDER BY creado_en DESC",
       args: [caseId],
     });
 
     const notes = result.rows.map((row) => ({
       id: String(row.id),
       personId: String(row.person_id),
-      createdAt: Number(row.created_at),
-      source: String(row.source),
-      authorName: String(row.author_name || "Anónimo"),
-      authorContact: String(row.author_contact || ""),
+      createdAt: Number(row.creado_en),
+      source: String(row.origen),
+      authorName: String(row.nombre_reportante || "Anónimo"),
+      authorContact: String(row.contacto_reportante || ""),
       authorRole: String(row.author_role || "user"),
       noteStatus: String(row.note_status || ""),
       text: String(row.text),
@@ -56,8 +56,8 @@ export async function POST(request: Request) {
     const now = Date.now();
 
     await db.execute({
-      sql: `INSERT INTO person_notes (
-        id, person_id, created_at, source, author_name, author_contact, author_role, note_status, text
+      sql: `INSERT INTO notas_persona (
+        id, person_id, creado_en, source, nombre_reportante, contacto_reportante, author_role, note_status, text
       ) VALUES (?, ?, ?, 'web_form', ?, ?, ?, ?, ?)`,
       args: [
         id,

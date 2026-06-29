@@ -36,33 +36,31 @@ async function syncExternal() {
         const id = `ext-${p.id}`;
         const source = 'desaparecidosterremotovenezuela.com';
         const source_url = 'https://desaparecidosterremotovenezuela.com';
-        const created_at = p.createdAt || Date.now();
-        const updated_at = p.updatedAt || Date.now();
-        const full_name = p.nombre || "Desconocido";
-        const age_estimated = p.edad || null;
-        const status = p.estado === "localizado" ? "located" : "missing";
-        const last_seen_address = p.ubicacion || "Desconocida";
-        const physical_desc = p.descripcion || null;
-        const photo_url = p.foto || null;
-        const author_contact = p.contacto || null;
+        const creado_en = p.createdAt || Date.now();
+        const actualizado_en = p.updatedAt || Date.now();
+        const nombre_completo = p.nombre || "Desconocido";
+        const edad_estimada = p.edad || null;
+        const estado_actual = p.estado === "localizado" ? "located" : "missing";
+        const ultima_direccion_conocida = p.ubicacion || "Desconocida";
+        const descripcion_fisica = p.descripcion || null;
+        const url_foto = p.foto || null;
+        const contacto_reportante = p.contacto || null;
 
         return {
-          sql: `INSERT INTO persons (
-            id, source, source_url, created_at, updated_at, full_name, age_estimated,
-            status, last_seen_address, physical_desc, photo_url, author_contact
+          sql: `INSERT INTO personas (
+            id, source, source_url, creado_en, actualizado_en, nombre_completo, edad_estimada, estado_actual, ultima_direccion_conocida, descripcion_fisica, url_foto, contacto_reportante
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           ON CONFLICT(id) DO UPDATE SET
-            updated_at = excluded.updated_at,
-            full_name = excluded.full_name,
-            age_estimated = excluded.age_estimated,
-            status = excluded.status,
-            last_seen_address = excluded.last_seen_address,
-            physical_desc = excluded.physical_desc,
-            photo_url = excluded.photo_url,
-            author_contact = excluded.author_contact`,
+            actualizado_en = excluded.actualizado_en,
+            nombre_completo = excluded.nombre_completo,
+            edad_estimada = excluded.edad_estimada,
+            estado_actual = excluded.status,
+            ultima_direccion_conocida = excluded.ultima_direccion_conocida,
+            descripcion_fisica = excluded.descripcion_fisica,
+            url_foto = excluded.url_foto,
+            contacto_reportante = excluded.contacto_reportante`,
           args: [
-            id, source, source_url, created_at, updated_at, full_name, age_estimated,
-            status, last_seen_address, physical_desc, photo_url, author_contact
+            id, source, source_url, creado_en, actualizado_en, nombre_completo, edad_estimada, estado_actual, ultima_direccion_conocida, descripcion_fisica, url_foto, contacto_reportante
           ]
         };
       });

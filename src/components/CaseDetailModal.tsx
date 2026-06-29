@@ -144,7 +144,7 @@ export function CaseDetailModal({
           physicalDesc: payload.physicalDesc,
           clothingDesc: payload.clothingDesc,
           lastSeenAddress: payload.lastSeenAddress,
-          status: payload.status,
+          status: payload.estado_actual,
           adminPassword: payload.adminPassword,
           photoDataUrl: editPhotoDataUrl,
         }),
@@ -186,7 +186,7 @@ export function CaseDetailModal({
           authorName: noteAuthor,
           authorContact: noteContact,
           authorRole: "user",
-          noteStatus: item.status,
+          noteStatus: item.estado_actual,
         }),
       });
 
@@ -303,10 +303,10 @@ export function CaseDetailModal({
         
         <div className="case-modal-media">
           {(showStatusPill || item.kind === "help") && (
-          <span className={`photo-pill ${item.status === 'located' || item.status === 'reunified' || item.status === 'resolved' ? 'located' : 'missing'}`}>
+          <span className={`photo-pill ${item.estado_actual === 'located' || item.estado_actual === 'reunified' || item.estado_actual === 'resolved' ? 'located' : 'missing'}`}>
               {item.kind === "help" 
-                ? (item.status === 'located' || item.status === 'reunified' || item.status === 'resolved' ? 'Atendida' : 'Pendiente')
-                : (item.status === 'located' || item.status === 'reunified' ? 'Localizada' : 'En búsqueda')}
+                ? (item.estado_actual === 'located' || item.estado_actual === 'reunified' || item.estado_actual === 'resolved' ? 'Atendida' : 'Pendiente')
+                : (item.estado_actual === 'located' || item.estado_actual === 'reunified' ? 'Localizada' : 'En búsqueda')}
             </span>
           )}
           {(() => {
@@ -405,7 +405,7 @@ export function CaseDetailModal({
               <div className="form-row">
                 <label>
                   <span>Estado de la persona *</span>
-                  <select name="status" defaultValue={item.status}>
+                  <select name="status" defaultValue={item.estado_actual}>
                     <option value="missing">En búsqueda</option>
                     <option value="located">Localizado</option>
                     <option value="reunified">Reunificado con familia</option>
@@ -504,7 +504,7 @@ export function CaseDetailModal({
               </div>
               <h2>{item.title}</h2>
               <div className="case-modal-badges">
-                <span>{statusLabels[item.status]}</span>
+                <span>{statusLabels[item.estado_actual]}</span>
               </div>
               <p>{item.description}</p>
               
@@ -549,7 +549,7 @@ export function CaseDetailModal({
                 <div><dt>Última actualización</dt><dd>{new Date(item.updatedAt).toLocaleString("es-VE", { dateStyle: "medium", timeStyle: "short" })}</dd></div>
               </dl>
               
-              {(isPerson || item.kind === "help") && (item.status === 'missing' || item.status === 'reported') && (
+              {(isPerson || item.kind === "help") && (item.estado_actual === 'missing' || item.estado_actual === 'reported') && (
                 <div className="report-action-card">
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ flex: '1 1 200px' }}>
@@ -602,7 +602,7 @@ export function CaseDetailModal({
                 </div>
               )}
 
-              {(isPerson || item.kind === "help") && (item.status === 'located' || item.status === 'reunified' || item.status === 'resolved') && (
+              {(isPerson || item.kind === "help") && (item.estado_actual === 'located' || item.estado_actual === 'reunified' || item.estado_actual === 'resolved') && (
                 <div className="report-action-card" style={{ background: '#fef2f2', borderColor: '#fecaca' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>

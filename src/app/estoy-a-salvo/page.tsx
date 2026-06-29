@@ -51,7 +51,7 @@ export default function EstoyASalvoPage() {
         body: JSON.stringify({
           caseId: matchData.id,
           status: "located",
-          authorName: matchData.full_name, // Self
+          authorName: matchData.nombre_completo, // Self
           authorContact: "Confirmación personal web",
           text: "Confirmó personalmente que se encuentra a salvo mediante el portal web."
         })
@@ -120,8 +120,8 @@ export default function EstoyASalvoPage() {
             </p>
             
             <div style={{ background: "#f0fdf4", padding: "1.5rem", borderRadius: "8px", border: "1px solid #bbf7d0", marginBottom: "2rem" }}>
-              <h3 style={{ margin: "0 0 0.5rem 0", color: "#166534" }}>{matchData.full_name}</h3>
-              <p style={{ margin: 0, color: "#166534", fontSize: "0.9rem" }}>Reportado en: {matchData.location_zone}</p>
+              <h3 style={{ margin: "0 0 0.5rem 0", color: "#166534" }}>{matchData.nombre_completo}</h3>
+              <p style={{ margin: 0, color: "#166534", fontSize: "0.9rem" }}>Reportado en: {matchData.zona_ubicacion}</p>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>

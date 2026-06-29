@@ -11,7 +11,7 @@ export async function POST(request: Request) {
       const parsedCedula = Number(cedula);
       if (!isNaN(parsedCedula)) {
         const res = await db.execute({
-          sql: `SELECT id, full_name, status, location_zone FROM persons WHERE cedula_identidad = ? AND is_deleted = 0 LIMIT 1`,
+          sql: `SELECT id, nombre_completo, estado_actual, zona_ubicacion FROM personas WHERE cedula_identidad = ? AND esta_eliminado = 0 LIMIT 1`,
           args: [parsedCedula]
         });
 
@@ -25,8 +25,8 @@ export async function POST(request: Request) {
     if (name && zone && name.trim() !== "" && zone.trim() !== "") {
       const qName = `%${name.trim().toLowerCase()}%`;
       const res = await db.execute({
-        sql: `SELECT id, full_name, status, location_zone FROM persons 
-              WHERE LOWER(full_name) LIKE ? AND location_zone = ? AND is_deleted = 0 LIMIT 1`,
+        sql: `SELECT id, nombre_completo, estado_actual, zona_ubicacion FROM personas 
+              WHERE LOWER(nombre_completo) LIKE ? AND zona_ubicacion = ? AND esta_eliminado = 0 LIMIT 1`,
         args: [qName, zone.trim()]
       });
 

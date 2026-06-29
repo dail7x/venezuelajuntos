@@ -13,7 +13,7 @@ export async function POST(request: Request) {
 
   try {
     const existing = await db.execute({
-      sql: `SELECT potential_duplicate_of FROM persons WHERE id = ?`,
+      sql: `SELECT posible_duplicado_de FROM personas WHERE id = ?`,
       args: [caseId]
     });
     
@@ -21,27 +21,27 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Case not found" }, { status: 404 });
     }
     
-    const duplicateOf = existing.rows[0].potential_duplicate_of;
+    const duplicateOf = existing.rows[0].posible_duplicado_de;
     
     if (isDuplicate) {
       // Mark as duplicate and hide from main views
       await db.execute({
-        sql: `UPDATE persons 
-              SET status = 'duplicate', duplicate_of = ?, potential_duplicate_of = NULL 
+        sql: `UPDATE personas 
+              SET estado_actual = 'duplicate', duplicado_de = ?, posible_duplicado_de = NULL 
               WHERE id = ?`,
         args: [duplicateOf, caseId]
       });
       
       // Also add a note for traceability
       await db.execute({
-        sql: `INSERT INTO person_notes (id, person_id, created_at, text, author_name, author_role, note_status)
+        sql: `INSERT INTO notas_persona (id, person_id, creado_en, text, nombre_reportante, author_role, note_status)
               VALUES (?, ?, ?, ?, ?, ?, ?)`,
         args: [`note-${Date.now()}`, caseId, Date.now(), `Marcado como posible registro duplicado, fue unificado por la comunidad con este reporte relacionado: [${duplicateOf}](/person/${duplicateOf})`, "Sistema", "admin", "duplicate"]
       });
     } else {
       // Clear the potential duplicate flag
       await db.execute({
-        sql: `UPDATE persons SET potential_duplicate_of = NULL WHERE id = ?`,
+        sql: `UPDATE personas SET posible_duplicado_de = NULL WHERE id = ?`,
         args: [caseId]
       });
     }

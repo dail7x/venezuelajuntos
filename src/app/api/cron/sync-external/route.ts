@@ -83,63 +83,63 @@ export async function POST(request: Request) {
         const id = `ext-${p.id}`;
         const source = 'desaparecidosterremotovenezuela.com';
         const source_url = 'https://desaparecidosterremotovenezuela.com';
-        const created_at = p.createdAt || Date.now();
-        const updated_at = p.updatedAt || Date.now();
-        const full_name = p.nombre || "Desconocido";
-        const age_estimated = p.edad || null;
+        const creado_en = p.createdAt || Date.now();
+        const actualizado_en = p.updatedAt || Date.now();
+        const nombre_completo = p.nombre || "Desconocido";
+        const edad_estimada = p.edad || null;
         // Solo guardamos como missing inicialmente en este script rápido. 
         // Si ya viene localizado desde la API externa, podríamos saltarlo o guardarlo, 
         // pero preferiblemente que el update-status se encargue. 
         // Sin embargo, para no perderlos si fueron localizados el mismo día, los guardamos y el status lo maneja update-status.
-        const status = p.estado === "localizado" ? "located" : "missing";
-        const last_seen_address = p.ubicacion || "Desconocida";
-        const physical_desc = p.descripcion || null;
-        const photo_url = p.foto || null;
-        const author_contact = p.contacto || null;
+        const estado_actual = p.estado === "localizado" ? "located" : "missing";
+        const ultima_direccion_conocida = p.ubicacion || "Desconocida";
+        const descripcion_fisica = p.descripcion || null;
+        const url_foto = p.foto || null;
+        const contacto_reportante = p.contacto || null;
 
         // Anti-Spam Filter
         const spamPattern = /infinityhotel\.it|casino|viagra|porn|seo services/i;
         const nameUrlPattern = /http:|https:|www\./i;
         
         if (
-          spamPattern.test(full_name) || spamPattern.test(last_seen_address) || spamPattern.test(physical_desc || '') ||
-          nameUrlPattern.test(full_name)
+          spamPattern.test(nombre_completo) || spamPattern.test(ultima_direccion_conocida) || spamPattern.test(descripcion_fisica || '') ||
+          nameUrlPattern.test(nombre_completo)
         ) {
-          console.log(`Skipping SPAM record from API: ${id} - ${full_name}`);
+          console.log(`Skipping SPAM record from API: ${id} - ${nombre_completo}`);
           continue; // Skip processing this record entirely
         }
 
         // Check if case already exists to see if we need AI normalization
         const existingRes = await db.execute({
-          sql: `SELECT location_normalized, location_zone, last_seen_address, updated_at FROM persons WHERE id = ?`,
+          sql: `SELECT ubicacion_normalizada, zona_ubicacion, ultima_direccion_conocida, actualizado_en FROM personas WHERE id = ?`,
           args: [id]
         });
         
-        let location_zone = null;
-        let location_normalized = null;
+        let zona_ubicacion = null;
+        let ubicacion_normalizada = null;
         
         const existingRow = existingRes.rows[0];
         
         // If it doesn't exist, or address changed, or hasn't been normalized yet, AND we have AI calls remaining
         if (
-          (!existingRow || existingRow.last_seen_address !== last_seen_address || !existingRow.location_normalized) 
+          (!existingRow || existingRow.ultima_direccion_conocida !== ultima_direccion_conocida || !existingRow.ubicacion_normalizada) 
           && aiCallsRemaining > 0 
-          && last_seen_address !== "Desconocida"
+          && ultima_direccion_conocida !== "Desconocida"
         ) {
-          const aiResult = await normalizeAddressWithAI(last_seen_address);
-          location_zone = aiResult.location_zone;
-          location_normalized = aiResult.location_normalized;
+          const aiResult = await normalizeAddressWithAI(ultima_direccion_conocida);
+          zona_ubicacion = aiResult.zona_ubicacion;
+          ubicacion_normalizada = aiResult.ubicacion_normalizada;
           aiCallsRemaining--;
           aiProcessedCount++;
         } else if (existingRow) {
           // Keep existing normalization if we don't parse it again
-          location_zone = existingRow.location_zone;
-          location_normalized = existingRow.location_normalized;
+          zona_ubicacion = existingRow.zona_ubicacion;
+          ubicacion_normalizada = existingRow.ubicacion_normalizada;
         }
 
         // Skip if already completely up to date
-        if (existingRow && Number(existingRow.updated_at) === Number(updated_at)) {
-          if (existingRow.location_normalized) {
+        if (existingRow && Number(existingRow.actualizado_en) === Number(actualizado_en)) {
+          if (existingRow.ubicacion_normalizada) {
             continue; // purely up to date
           }
         }
@@ -147,37 +147,35 @@ export async function POST(request: Request) {
         pageHasUpdates = true;
 
         // Duplicate detection: if this is a new record or hasn't been checked
-        let potential_duplicate_of = null;
+        let posible_duplicado_de = null;
         if (!existingRow) {
           const dupRes = await db.execute({
-            sql: `SELECT id FROM persons WHERE lower(full_name) = lower(?) AND id != ? LIMIT 1`,
-            args: [full_name.trim(), id]
+            sql: `SELECT id FROM personas WHERE lower(nombre_completo) = lower(?) AND id != ? LIMIT 1`,
+            args: [nombre_completo.trim(), id]
           });
           if (dupRes.rows.length > 0) {
-            potential_duplicate_of = dupRes.rows[0].id;
+            posible_duplicado_de = dupRes.rows[0].id;
           }
         }
 
         await db.execute({
-          sql: `INSERT INTO persons (
-            id, source, source_url, created_at, updated_at, full_name, age_estimated,
-            status, last_seen_address, location_zone, location_normalized, physical_desc, photo_url, author_contact, potential_duplicate_of
+          sql: `INSERT INTO personas (
+            id, source, source_url, creado_en, actualizado_en, nombre_completo, edad_estimada, estado_actual, ultima_direccion_conocida, zona_ubicacion, ubicacion_normalizada, descripcion_fisica, url_foto, contacto_reportante, posible_duplicado_de
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           ON CONFLICT(id) DO UPDATE SET
-            updated_at = excluded.updated_at,
-            full_name = excluded.full_name,
-            age_estimated = excluded.age_estimated,
-            status = excluded.status,
-            last_seen_address = excluded.last_seen_address,
-            location_zone = COALESCE(excluded.location_zone, persons.location_zone),
-            location_normalized = COALESCE(excluded.location_normalized, persons.location_normalized),
-            physical_desc = excluded.physical_desc,
-            photo_url = excluded.photo_url,
-            author_contact = excluded.author_contact,
-            potential_duplicate_of = COALESCE(persons.potential_duplicate_of, excluded.potential_duplicate_of)`,
+            actualizado_en = excluded.actualizado_en,
+            nombre_completo = excluded.nombre_completo,
+            edad_estimada = excluded.edad_estimada,
+            estado_actual = excluded.estado_actual,
+            ultima_direccion_conocida = excluded.ultima_direccion_conocida,
+            zona_ubicacion = COALESCE(excluded.zona_ubicacion, personas.zona_ubicacion),
+            ubicacion_normalizada = COALESCE(excluded.ubicacion_normalizada, personas.ubicacion_normalizada),
+            descripcion_fisica = excluded.descripcion_fisica,
+            url_foto = excluded.url_foto,
+            contacto_reportante = excluded.contacto_reportante,
+            posible_duplicado_de = COALESCE(personas.posible_duplicado_de, excluded.posible_duplicado_de)`,
           args: [
-            id, source, source_url, created_at, updated_at, full_name, age_estimated,
-            status, last_seen_address, location_zone, location_normalized, physical_desc, photo_url, author_contact, potential_duplicate_of
+            id, source, source_url, creado_en, actualizado_en, nombre_completo, edad_estimada, estado_actual, ultima_direccion_conocida, zona_ubicacion, ubicacion_normalizada, descripcion_fisica, url_foto, contacto_reportante, posible_duplicado_de
           ]
         });
         

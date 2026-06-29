@@ -31,28 +31,28 @@ function resolvePhotoUrl(url: string): string {
   return url;
 }
 
-function personStatus(status: string): CaseStatus {
-  if (status === "located" || status === "alive_located") return "located";
-  if (status === "reunified") return "reunified";
-  if (status === "duplicate") return "duplicate";
-  if (status === "false_alarm") return "false_alarm";
+function personStatus(estado_actual: string): CaseStatus {
+  if (estado_actual === "located" || estado_actual === "alive_located") return "located";
+  if (estado_actual === "reunified") return "reunified";
+  if (estado_actual === "duplicate") return "duplicate";
+  if (estado_actual === "false_alarm") return "false_alarm";
   return "missing";
 }
 
-function requestStatus(status: string): CaseStatus {
-  if (status === "open") return "reported";
-  if (status === "fulfilled") return "resolved";
-  if (status === "duplicate") return "duplicate";
-  if (status === "assigned") return "assigned";
-  if (status === "in_progress") return "in_progress";
+function requestStatus(estado_actual: string): CaseStatus {
+  if (estado_actual === "open") return "reported";
+  if (estado_actual === "fulfilled") return "resolved";
+  if (estado_actual === "duplicate") return "duplicate";
+  if (estado_actual === "assigned") return "assigned";
+  if (estado_actual === "in_progress") return "in_progress";
   return "reported";
 }
 
-function zoneStatus(status: string): CaseStatus {
-  if (status === "active_rescue") return "in_progress";
-  if (status === "needs_verification") return "needs_verification";
-  if (status === "resolved") return "resolved";
-  if (status === "false_alarm") return "false_alarm";
+function zoneStatus(estado_actual: string): CaseStatus {
+  if (estado_actual === "active_rescue") return "in_progress";
+  if (estado_actual === "needs_verification") return "needs_verification";
+  if (estado_actual === "resolved") return "resolved";
+  if (estado_actual === "false_alarm") return "false_alarm";
   return "reported";
 }
 
@@ -61,86 +61,85 @@ function signals() {
 }
 
 function mapPerson(row: Row): PublicCase {
-  const name = text(row.full_name, "Nombre por confirmar");
-  const status = personStatus(text(row.status, "missing"));
-  const zone = text(row.location_zone, text(row.last_seen_address || row.found_address, "Zona por confirmar"));
-  const publicAddress = text(row.location_normalized, text(row.last_seen_address || row.found_address, "Zona por confirmar"));
+  const name = text(row.nombre_completo, "Nombre por confirmar");
+  const estado_actual = personStatus(text(row.estado_actual, "missing"));
+  const zone = text(row.zona_ubicacion, text(row.ultima_direccion_conocida || row.direccion_encontrado, "Zona por confirmar"));
+  const publicAddress = text(row.ubicacion_normalizada, text(row.ultima_direccion_conocida || row.direccion_encontrado, "Zona por confirmar"));
 
   return {
     id: text(row.id),
     slug: normalizeSlug(`${name}-${zone}`),
-    kind: status === "located" || status === "reunified" ? "found" : "missing",
+    kind: estado_actual === "located" || estado_actual === "reunified" ? "found" : "missing",
     title: name,
     personName: name,
     cedula: typeof row.cedula_identidad === "number" ? row.cedula_identidad : undefined,
-    age: typeof row.age_estimated === "number" ? row.age_estimated : undefined,
-    status,
+    age: typeof row.edad_estimada === "number" ? row.edad_estimada : undefined, estado_actual,
     zone,
     publicAddress,
-    lat: number(row.last_seen_lat || row.found_lat, 10.4806),
-    lng: number(row.last_seen_lng || row.found_lng, -66.9036),
-    createdAt: dateIso(row.created_at),
-    updatedAt: dateIso(row.updated_at),
-    lastConfirmedAt: dateIso(row.updated_at),
-    description: text(row.physical_desc || row.clothing_desc, "Información pendiente de revisión."),
-    photoUrl: resolvePhotoUrl(text(row.photo_url)),
-    foundNotes: text(row.found_notes) || undefined,
-    reporterPublic: text(row.author_relation, "Reporte ciudadano"),
-    reporterName: text(row.author_name) || undefined,
-    reporterContact: text(row.author_contact) || undefined,
+    lat: number(row.latitud_visto_ultima_vez || row.latitud_encontrado, 10.4806),
+    lng: number(row.longitud_visto_ultima_vez || row.longitud_encontrado, -66.9036),
+    createdAt: dateIso(row.creado_en),
+    updatedAt: dateIso(row.actualizado_en),
+    lastConfirmedAt: dateIso(row.actualizado_en),
+    description: text(row.descripcion_fisica || row.descripcion_vestimenta, "Información pendiente de revisión."),
+    photoUrl: resolvePhotoUrl(text(row.url_foto)),
+    foundNotes: text(row.notas_hallazgo) || undefined,
+    reporterPublic: text(row.relacion_reportante, "Reporte ciudadano"),
+    reporterName: text(row.nombre_reportante) || undefined,
+    reporterContact: text(row.contacto_reportante) || undefined,
     signals: signals(),
     sensitiveHidden: true,
-    needs: status === "missing" ? ["Información confirmada", "Cruce con personas localizadas"] : ["Verificación familiar"],
-    potentialDuplicateOf: text(row.potential_duplicate_of) || undefined,
+    needs: estado_actual === "missing" ? ["Información confirmada", "Cruce con personas localizadas"] : ["Verificación familiar"],
+    potentialDuplicateOf: text(row.posible_duplicado_de) || undefined,
     inHospitalList: !!row.in_hospital_list,
   };
 }
 
 function mapRequest(row: Row): PublicCase {
-  const title = text(row.title, text(row.request_type, "Solicitud de ayuda"));
-  const zone = text(row.address, "Zona por confirmar");
+  const title = text(row.titulo, text(row.tipo_solicitud, "Solicitud de ayuda"));
+  const zone = text(row.direccion, "Zona por confirmar");
 
   return {
     id: text(row.id),
     slug: normalizeSlug(`${title}-${zone}`),
     kind: "help",
     title,
-    status: requestStatus(text(row.status, "open")),
+    estado_actual: requestStatus(text(row.estado_actual, "open")),
     zone,
     publicAddress: zone,
     lat: number(row.lat, 10.4806),
     lng: number(row.lng, -66.9036),
-    createdAt: dateIso(row.created_at),
-    updatedAt: dateIso(row.updated_at),
-    lastConfirmedAt: dateIso(row.updated_at),
-    description: text(row.description, "Solicitud pendiente de revisión."),
+    createdAt: dateIso(row.creado_en),
+    updatedAt: dateIso(row.actualizado_en),
+    lastConfirmedAt: dateIso(row.actualizado_en),
+    description: text(row.descripcion, "Solicitud pendiente de revisión."),
     reporterPublic: "Solicitante protegido",
-    reporterName: text(row.requester_name) || undefined,
-    reporterContact: text(row.requester_contact) || undefined,
+    reporterName: text(row.nombre_solicitante) || undefined,
+    reporterContact: text(row.contacto_solicitante) || undefined,
     signals: signals(),
     sensitiveHidden: true,
-    needs: [text(row.request_type, "ayuda"), "Coordinar apoyo"],
+    needs: [text(row.tipo_solicitud, "ayuda"), "Coordinar apoyo"],
   };
 }
 
 function mapZone(row: Row): PublicCase {
-  const title = text(row.title, "Zona de rescate");
-  const zone = text(row.address, "Zona por confirmar");
+  const title = text(row.titulo, "Zona de rescate");
+  const zone = text(row.direccion, "Zona por confirmar");
 
   return {
     id: text(row.id),
     slug: normalizeSlug(`${title}-${zone}`),
     kind: "zone",
     title,
-    status: zoneStatus(text(row.status, "reported")),
+    estado_actual: zoneStatus(text(row.estado_actual, "reported")),
     zone,
     publicAddress: zone,
     lat: number(row.lat, 10.4806),
     lng: number(row.lng, -66.9036),
-    createdAt: dateIso(row.created_at),
-    updatedAt: dateIso(row.updated_at),
-    lastConfirmedAt: dateIso(row.updated_at),
-    description: text(row.description, "Zona pendiente de revisión."),
+    createdAt: dateIso(row.creado_en),
+    updatedAt: dateIso(row.actualizado_en),
+    lastConfirmedAt: dateIso(row.actualizado_en),
+    description: text(row.descripcion, "Zona pendiente de revisión."),
     reporterPublic: "Reporte comunitario",
     reporterName: text(row.reporter_name) || undefined,
     reporterContact: text(row.reporter_contact) || undefined,
@@ -151,124 +150,121 @@ function mapZone(row: Row): PublicCase {
 }
 
 function mapPet(row: Row): PublicCase {
-  const reportKind = text(row.report_kind, "pet_lost");
-  const type = text(row.pet_type, "mascota");
-  const name = text(row.pet_name, type);
-  const zone = text(row.zone, "Zona por confirmar");
+  const reportKind = text(row.tipo_reporte, "pet_lost");
+  const type = text(row.tipo_mascota, "mascota");
+  const name = text(row.nombre_mascota, type);
+  const zone = text(row.zona, "Zona por confirmar");
 
   return {
     id: text(row.id),
     slug: normalizeSlug(`${reportKind}-${name}-${zone}`),
     kind: reportKind === "pet_found" ? "pet_found" : "pet_lost",
     title: reportKind === "pet_found" ? `${name} recuperada` : `${name} perdida`,
-    status: reportKind === "pet_found" ? "located" : "reported",
+    estado_actual: reportKind === "pet_found" ? "located" : "reported",
     zone,
     publicAddress: zone,
     lat: 10.4806,
     lng: -66.9036,
-    createdAt: dateIso(row.created_at),
-    updatedAt: dateIso(row.updated_at),
-    lastConfirmedAt: dateIso(row.updated_at),
-    description: text(row.description, "Reporte de mascota pendiente de revisión."),
-    photoUrl: resolvePhotoUrl(text(row.photo_url)),
+    createdAt: dateIso(row.creado_en),
+    updatedAt: dateIso(row.actualizado_en),
+    lastConfirmedAt: dateIso(row.actualizado_en),
+    description: text(row.descripcion, "Reporte de mascota pendiente de revisión."),
+    photoUrl: resolvePhotoUrl(text(row.url_foto)),
     reporterPublic: "Contacto protegido",
-    reporterName: text(row.contact_name) || undefined,
-    reporterContact: text(row.contact_phone) || undefined,
+    reporterName: text(row.nombre_contacto) || undefined,
+    reporterContact: text(row.telefono_contacto) || undefined,
     signals: signals(),
     sensitiveHidden: true,
-    needs: [text(row.status, "revisión"), row.can_foster ? "Tránsito disponible" : "Buscar tránsito"],
+    needs: [text(row.estado_actual, "revisión"), row.puede_acoger ? "Tránsito disponible" : "Buscar tránsito"],
   };
 }
 
 function mapShelter(row: Row): PublicCase {
-  const reportKind = text(row.report_kind, "shelter_request");
-  const title = text(row.title, reportKind === "shelter_offer" ? "Refugio disponible" : "Solicitud de refugio");
-  const zone = text(row.zone, "Zona por confirmar");
+  const reportKind = text(row.tipo_reporte, "shelter_request");
+  const title = text(row.titulo, reportKind === "shelter_offer" ? "Refugio disponible" : "Solicitud de refugio");
+  const zone = text(row.zona, "Zona por confirmar");
 
   return {
     id: text(row.id),
     slug: normalizeSlug(`${reportKind}-${title}-${zone}`),
     kind: reportKind === "shelter_offer" ? "shelter_offer" : "shelter_request",
     title,
-    status: "reported",
+    estado_actual: "reported",
     zone,
     publicAddress: zone,
     lat: 10.4806,
     lng: -66.9036,
-    createdAt: dateIso(row.created_at),
-    updatedAt: dateIso(row.updated_at),
-    lastConfirmedAt: dateIso(row.updated_at),
-    description: text(row.description, "Reporte de refugio pendiente de revisión."),
-    photoUrl: resolvePhotoUrl(text(row.photo_url)),
+    createdAt: dateIso(row.creado_en),
+    updatedAt: dateIso(row.actualizado_en),
+    lastConfirmedAt: dateIso(row.actualizado_en),
+    description: text(row.descripcion, "Reporte de refugio pendiente de revisión."),
+    photoUrl: resolvePhotoUrl(text(row.url_foto)),
     reporterPublic: "Contacto protegido",
-    reporterName: text(row.contact_name) || undefined,
-    reporterContact: text(row.contact_phone) || undefined,
+    reporterName: text(row.nombre_contacto) || undefined,
+    reporterContact: text(row.telefono_contacto) || undefined,
     signals: signals(),
     sensitiveHidden: true,
-    needs: [text(row.needs || row.shelter_type, "coordinar apoyo"), "Cruzar por zona"],
+    needs: [text(row.necesidades || row.tipo_refugio, "coordinar apoyo"), "Cruzar por zona"],
   };
 }
 
-export async function getPublicCasesFromDb(page = 1, limit = 100, query = "", zoneQ = "", status = "", hasUpdates = false) {
+export async function getPublicCasesFromDb(page = 1, limit = 100, query = "", zoneQ = "", estado_actual = "", hasUpdates = false) {
   if (!hasDatabaseEnv()) return { items: seedCases, total: seedCases.length };
 
   const db = getDb();
   const offset = (page - 1) * limit;
 
   let statusCond = "";
-  if (status && status !== "hospital" && status !== "resolved") {
-    statusCond = `AND status = '${status}'`;
-  } else if (status === "hospital") {
-    statusCond = `AND (EXISTS (SELECT 1 FROM person_notes WHERE person_id = persons.id AND source = 'hospital_list') OR found_notes LIKE '%hospital%')`;
+  if (estado_actual && estado_actual !== "hospital" && estado_actual !== "resolved") {
+    statusCond = `AND estado_actual = '${estado_actual}'`;
+  } else if (estado_actual === "hospital") {
+    statusCond = `AND (EXISTS (SELECT 1 FROM notas_persona WHERE persona_id = personas.id AND origen = 'lista_hospital') OR notas_hallazgo LIKE '%hospital%')`;
   }
 
   const sqlBase = `
     SELECT * FROM (
-      SELECT id, 'person' as type, updated_at,
-             full_name as title_or_name,
-             COALESCE(location_zone, last_seen_address, found_address) as zone_or_address,
-             COALESCE(physical_desc, clothing_desc) as search_desc,
-             status,
-             potential_duplicate_of,
-             (SELECT 1 FROM person_notes WHERE person_id = persons.id AND source = 'hospital_list' LIMIT 1) as in_hospital_list
-      FROM persons WHERE is_deleted = 0 ${hasUpdates ? "AND (EXISTS (SELECT 1 FROM person_notes WHERE person_id = persons.id) OR EXISTS (SELECT 1 FROM persons p2 WHERE p2.potential_duplicate_of = persons.id) OR found_notes IS NOT NULL)" : ""} ${statusCond}
+      SELECT id, 'person' as type, actualizado_en, creado_en,
+             nombre_completo as title_or_name,
+             COALESCE(zona_ubicacion, ultima_direccion_conocida, direccion_encontrado) as zone_or_address,
+             COALESCE(descripcion_fisica, descripcion_vestimenta) as search_desc, estado_actual,
+             posible_duplicado_de,
+             (SELECT 1 FROM notas_persona WHERE persona_id = personas.id AND origen = 'lista_hospital' LIMIT 1) as in_hospital_list
+      FROM personas WHERE esta_eliminado = 0 ${hasUpdates ? "AND (EXISTS (SELECT 1 FROM notas_persona WHERE persona_id = personas.id) OR EXISTS (SELECT 1 FROM personas p2 WHERE p2.posible_duplicado_de = personas.id) OR notas_hallazgo IS NOT NULL)" : ""} ${statusCond}
       UNION ALL
-      SELECT id, 'request' as type, updated_at,
-             COALESCE(title, request_type) as title_or_name,
-             address as zone_or_address,
-             description as search_desc,
-             status,
-             NULL as potential_duplicate_of,
+      SELECT id, 'request' as type, actualizado_en, creado_en,
+             COALESCE(titulo, tipo_solicitud) as title_or_name,
+             direccion as zone_or_address,
+             descripcion as search_desc, estado as estado_actual,
+             NULL as posible_duplicado_de,
              NULL as in_hospital_list
-      FROM help_requests WHERE is_deleted = 0 ${hasUpdates ? "AND 1=0" : ""}
+      FROM solicitudes_ayuda WHERE esta_eliminado = 0 ${hasUpdates ? "AND 1=0" : ""}
       UNION ALL
-      SELECT id, 'zone' as type, updated_at,
-             title as title_or_name,
-             address as zone_or_address,
-             description as search_desc,
-             status,
-             NULL as potential_duplicate_of,
+      SELECT id, 'zone' as type, actualizado_en, creado_en,
+             titulo as title_or_name,
+             direccion as zone_or_address,
+             descripcion as search_desc, estado as estado_actual,
+             NULL as posible_duplicado_de,
              NULL as in_hospital_list
-      FROM rescue_zones WHERE is_deleted = 0 ${hasUpdates ? "AND 1=0" : ""}
+      FROM zonas_rescate WHERE esta_eliminado = 0 ${hasUpdates ? "AND 1=0" : ""}
       UNION ALL
-      SELECT id, 'pet' as type, updated_at,
-             pet_name as title_or_name,
-             zone as zone_or_address,
-             description as search_desc,
-             status,
-             NULL as potential_duplicate_of,
+      SELECT id, 'pet' as type, actualizado_en, creado_en,
+             nombre_mascota as title_or_name,
+             zona as zone_or_address,
+             descripcion as search_desc, estado as estado_actual,
+             NULL as posible_duplicado_de,
              NULL as in_hospital_list
-      FROM pet_reports WHERE is_deleted = 0 ${hasUpdates ? "AND 1=0" : ""}
+      FROM reportes_mascotas WHERE esta_eliminado = 0 ${hasUpdates ? "AND 1=0" : ""}
       UNION ALL
-      SELECT id, 'shelter' as type, updated_at,
-             title as title_or_name,
-             zone as zone_or_address,
-             description as search_desc,
-             'reported' as status,
-             NULL as potential_duplicate_of,
+      SELECT id, 'shelter' as type, actualizado_en, creado_en,
+             titulo as title_or_name,
+             zona as zone_or_address,
+             descripcion as search_desc,
+             'reported' as estado_actual,
+             NULL as posible_duplicado_de,
              NULL as in_hospital_list
-      FROM shelter_reports WHERE is_deleted = 0 ${hasUpdates ? "AND 1=0" : ""}
+      FROM reportes_refugios WHERE esta_eliminado = 0 ${hasUpdates ? "AND 1=0" : ""}
     ) unified
+
     WHERE 1=1
   `;
 
@@ -285,11 +281,11 @@ export async function getPublicCasesFromDb(page = 1, limit = 100, query = "", zo
     args.push(`%${zoneQ}%`);
   }
   
-  if (status === "resolved") {
-    conditions += ` AND status IN ('located', 'reunified', 'resolved', 'closed')`;
+  if (estado_actual === "resolved") {
+    conditions += ` AND estado_actual IN ('located', 'reunified', 'resolved', 'closed')`;
   }
   const countSql = `SELECT count(*) as total FROM (${sqlBase} ${conditions}) c`;
-  const resultSql = `${sqlBase} ${conditions} ORDER BY updated_at DESC LIMIT ? OFFSET ?`;
+  const resultSql = `${sqlBase} ${conditions} ORDER BY creado_en DESC LIMIT ? OFFSET ?`;
   
   const countArgs = [...args];
   const resultArgs = [...args, limit, offset];
@@ -307,16 +303,16 @@ export async function getPublicCasesFromDb(page = 1, limit = 100, query = "", zo
   const petIds = unifiedRes.rows.filter(r => r.type === 'pet').map(r => r.id);
   const shelterIds = unifiedRes.rows.filter(r => r.type === 'shelter').map(r => r.id);
 
-  const [persons, requests, zones, pets, shelters] = await Promise.all([
-    personIds.length > 0 ? db.execute({ sql: `SELECT * FROM persons WHERE id IN (${personIds.map(()=>'?').join(',')})`, args: personIds }) : { rows: [] },
-    requestIds.length > 0 ? db.execute({ sql: `SELECT * FROM help_requests WHERE id IN (${requestIds.map(()=>'?').join(',')})`, args: requestIds }) : { rows: [] },
-    zoneIds.length > 0 ? db.execute({ sql: `SELECT * FROM rescue_zones WHERE id IN (${zoneIds.map(()=>'?').join(',')})`, args: zoneIds }) : { rows: [] },
-    petIds.length > 0 ? db.execute({ sql: `SELECT * FROM pet_reports WHERE id IN (${petIds.map(()=>'?').join(',')})`, args: petIds }) : { rows: [] },
-    shelterIds.length > 0 ? db.execute({ sql: `SELECT * FROM shelter_reports WHERE id IN (${shelterIds.map(()=>'?').join(',')})`, args: shelterIds }) : { rows: [] },
+  const [personas, requests, zones, pets, shelters] = await Promise.all([
+    personIds.length > 0 ? db.execute({ sql: `SELECT * FROM personas WHERE id IN (${personIds.map(()=>'?').join(',')})`, args: personIds }) : { rows: [] },
+    requestIds.length > 0 ? db.execute({ sql: `SELECT * FROM solicitudes_ayuda WHERE id IN (${requestIds.map(()=>'?').join(',')})`, args: requestIds }) : { rows: [] },
+    zoneIds.length > 0 ? db.execute({ sql: `SELECT * FROM zonas_rescate WHERE id IN (${zoneIds.map(()=>'?').join(',')})`, args: zoneIds }) : { rows: [] },
+    petIds.length > 0 ? db.execute({ sql: `SELECT * FROM reportes_mascotas WHERE id IN (${petIds.map(()=>'?').join(',')})`, args: petIds }) : { rows: [] },
+    shelterIds.length > 0 ? db.execute({ sql: `SELECT * FROM reportes_refugios WHERE id IN (${shelterIds.map(()=>'?').join(',')})`, args: shelterIds }) : { rows: [] },
   ]);
 
   const publicCases = [
-    ...persons.rows.map((row) => mapPerson(row as Row)),
+    ...personas.rows.map((row) => mapPerson(row as Row)),
     ...requests.rows.map((row) => mapRequest(row as Row)),
     ...zones.rows.map((row) => mapZone(row as Row)),
     ...pets.rows.map((row) => mapPet(row as Row)),
@@ -351,20 +347,24 @@ export async function getGlobalStatsFromDb() {
   const sql = `
     SELECT 
       (
-        SELECT count(*) FROM persons WHERE is_deleted=0 AND status NOT IN ('duplicate', 'false_alarm')
+        SELECT count(*) FROM personas WHERE esta_eliminado=0 AND estado_actual NOT IN ('duplicate', 'false_alarm')
       ) AS open,
       
       (
-        SELECT count(*) FROM persons WHERE is_deleted=0 AND status NOT IN ('located', 'reunified', 'duplicate', 'false_alarm')
+        SELECT count(*) FROM personas WHERE esta_eliminado=0 AND estado_actual NOT IN ('located', 'reunified', 'duplicate', 'false_alarm')
       ) AS missing,
       
       (
-        SELECT count(*) FROM persons WHERE is_deleted=0 AND status IN ('located', 'reunified')
+        SELECT count(*) FROM personas WHERE esta_eliminado=0 AND estado_actual IN ('located', 'reunified')
       ) AS resolved,
 
       (
-        SELECT count(*) FROM persons WHERE is_deleted=0 AND potential_duplicate_of IS NOT NULL
-      ) AS duplicates
+        SELECT count(*) FROM personas WHERE esta_eliminado=0 AND posible_duplicado_de IS NOT NULL
+      ) AS duplicates,
+
+      (
+        SELECT count(*) FROM personas WHERE esta_eliminado=0 AND posible_duplicado_de IS NULL
+      ) AS unique_people
   `;
   
   const res = await db.execute(sql);
@@ -373,7 +373,8 @@ export async function getGlobalStatsFromDb() {
     open: Number(row.open),
     missing: Number(row.missing),
     resolved: Number(row.resolved),
-    duplicates: Number(row.duplicates)
+    duplicates: Number(row.duplicates),
+    unique_people: Number(row.unique_people)
   };
 }
 
@@ -386,11 +387,11 @@ export async function getCaseById(id: string): Promise<PublicCase | null> {
   
   // A quick check across tables
   const queries = [
-    { type: 'person', sql: 'SELECT * FROM persons WHERE id = ? OR pfif_person_id = ?' },
-    { type: 'request', sql: 'SELECT * FROM help_requests WHERE id = ?' },
-    { type: 'zone', sql: 'SELECT * FROM rescue_zones WHERE id = ?' },
-    { type: 'pet', sql: 'SELECT * FROM pet_reports WHERE id = ?' },
-    { type: 'shelter', sql: 'SELECT * FROM shelter_reports WHERE id = ?' }
+    { type: 'person', sql: 'SELECT * FROM personas WHERE id = ? OR pfif_persona_id = ?' },
+    { type: 'request', sql: 'SELECT * FROM solicitudes_ayuda WHERE id = ?' },
+    { type: 'zone', sql: 'SELECT * FROM zonas_rescate WHERE id = ?' },
+    { type: 'pet', sql: 'SELECT * FROM reportes_mascotas WHERE id = ?' },
+    { type: 'shelter', sql: 'SELECT * FROM reportes_refugios WHERE id = ?' }
   ];
 
   for (const q of queries) {
@@ -414,7 +415,7 @@ export async function createCaseInDb(kind: string, payload: Record<string, unkno
   const id = nanoid(10);
 
   if (kind === "missing" || kind === "found") {
-    const image = await uploadReportImage(payload.photoDataUrl, "persons");
+    const image = await uploadReportImage(payload.photoDataUrl, "personas");
     const isFound = kind === "found";
     const fName = typeof payload.firstName === "string" ? payload.firstName.trim() : "";
     const lName = typeof payload.lastName === "string" ? payload.lastName.trim() : "";
@@ -425,10 +426,10 @@ export async function createCaseInDb(kind: string, payload: Record<string, unkno
     const description = text(payload.physicalDesc || payload.description || payload.observations, "Sin información adicional.");
 
     await db.execute({
-      sql: `INSERT INTO persons (
-        id, pfif_person_id, source, created_at, updated_at, author_name, author_contact, author_relation,
-        full_name, alternate_names, sex, age_estimated, physical_desc, clothing_desc, photo_url,
-        last_seen_address, last_seen_at, status, found_address, found_notes, cedula_identidad
+      sql: `INSERT INTO personas (
+        id, pfif_person_id, origen, creado_en, actualizado_en, nombre_reportante, contacto_reportante, relacion_reportante,
+        nombre_completo, nombres_alternativos, sexo, edad_estimada, descripcion_fisica, descripcion_vestimenta, url_foto,
+        ultima_direccion_conocida, fecha_visto_ultima_vez, estado_actual, direccion_encontrado, notas_hallazgo, cedula_identidad
       ) VALUES (?, ?, 'web_form', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [
         id,
@@ -460,9 +461,9 @@ export async function createCaseInDb(kind: string, payload: Record<string, unkno
   } else if (kind === "pet_lost" || kind === "pet_found") {
     const image = await uploadReportImage(payload.photoDataUrl, "pets");
     await db.execute({
-      sql: `INSERT INTO pet_reports (
-        id, created_at, updated_at, report_kind, pet_name, pet_type, status, description, zone,
-        contact_name, contact_phone, can_foster, photo_url
+      sql: `INSERT INTO reportes_mascotas (
+        id, creado_en, actualizado_en, tipo_reporte, nombre_mascota, tipo_mascota, estado, descripcion, zona,
+        nombre_contacto, telefono_contacto, puede_acoger, url_foto
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [
         id,
@@ -471,7 +472,7 @@ export async function createCaseInDb(kind: string, payload: Record<string, unkno
         kind,
         text(payload.petName),
         text(payload.petType, "mascota"),
-        text(payload.status),
+        text(payload.estado_actual),
         text(payload.description, "Sin información adicional."),
         text(payload.zone, "Zona por confirmar"),
         text(payload.contactName),
@@ -484,9 +485,9 @@ export async function createCaseInDb(kind: string, payload: Record<string, unkno
     const isOffer = kind === "shelter_offer";
     const title = isOffer ? text(payload.shelterName, "Refugio disponible") : `${text(payload.groupType, "Grupo")} solicita refugio`;
     await db.execute({
-      sql: `INSERT INTO shelter_reports (
-        id, created_at, updated_at, report_kind, title, shelter_type, zone, contact_name, contact_phone,
-        capacity, group_size, needs, description
+      sql: `INSERT INTO reportes_refugios (
+        id, creado_en, actualizado_en, tipo_reporte, titulo, tipo_refugio, zona, nombre_contacto, telefono_contacto,
+        capacidad, tamano_grupo, necesidades, descripcion
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [
         id,
@@ -511,10 +512,10 @@ export async function createCaseInDb(kind: string, payload: Record<string, unkno
     const title = `${requestType.replace(/_/g, " ")} · ${address}`;
 
     await db.execute({
-      sql: `INSERT INTO help_requests (
-        id, created_at, updated_at, source, request_type, title, description, address,
-        requester_name, requester_contact, number_of_people, has_children, has_elderly, has_disabled, status
-      ) VALUES (?, ?, ?, 'web_form', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'open')`,
+      sql: `INSERT INTO solicitudes_ayuda (
+        id, creado_en, actualizado_en, origen, tipo_solicitud, titulo, descripcion, direccion,
+        nombre_solicitante, contacto_solicitante, cantidad_personas, tiene_ninos, tiene_ancianos, tiene_discapacitados, estado
+      ) VALUES (?, ?, ?, 'web_form', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'abierta')`,
       args: [
         id,
         now,
@@ -533,9 +534,9 @@ export async function createCaseInDb(kind: string, payload: Record<string, unkno
     });
   } else if (kind === "volunteer") {
     await db.execute({
-      sql: `INSERT INTO volunteers (
-        id, registered_at, updated_at, name, contact, country, city, volunteer_type,
-        skills, has_vehicle, vehicle_type, notes, active, last_seen_at
+      sql: `INSERT INTO voluntarios (
+        id, registered_at, actualizado_en, name, contact, country, city, tipo_voluntario,
+        skills, tiene_vehiculo, tipo_vehiculo, notes, active, fecha_visto_ultima_vez
       ) VALUES (?, ?, ?, ?, ?, 'VE', ?, ?, ?, ?, ?, ?, 1, ?)`,
       args: [
         id,
@@ -561,33 +562,33 @@ export async function getZoneStats() {
   const db = getDb();
   
   const zonesRes = await db.execute({
-    sql: `SELECT location_zone, COUNT(*) as total
-          FROM persons 
-          WHERE location_zone IS NOT NULL AND is_deleted = 0 AND status IN ('missing', 'reported')
-          GROUP BY location_zone
+    sql: `SELECT zona_ubicacion, COUNT(*) as total
+          FROM personas 
+          WHERE zona_ubicacion IS NOT NULL AND esta_eliminado = 0 AND estado_actual IN ('missing', 'reported')
+          GROUP BY zona_ubicacion
           ORDER BY total DESC`,
     args: []
   });
 
   const hotspotsRes = await db.execute({
-    sql: `SELECT location_zone, location_normalized, COUNT(*) as total
-          FROM persons
-          WHERE location_normalized IS NOT NULL AND is_deleted = 0 AND status IN ('missing', 'reported')
-          GROUP BY location_zone, location_normalized
+    sql: `SELECT zona_ubicacion, ubicacion_normalizada, COUNT(*) as total
+          FROM personas
+          WHERE ubicacion_normalizada IS NOT NULL AND esta_eliminado = 0 AND estado_actual IN ('missing', 'reported')
+          GROUP BY zona_ubicacion, ubicacion_normalizada
           HAVING total >= 2
-          ORDER BY location_zone ASC, total DESC`,
+          ORDER BY zona_ubicacion ASC, total DESC`,
     args: []
   });
 
   const zones = zonesRes.rows.map((r: Row) => ({
-    zone: text(r.location_zone),
+    zone: text(r.zona_ubicacion),
     total: number(r.total, 0),
     hotspots: [] as { address: string, count: number }[]
   }));
 
   for (const hotspot of hotspotsRes.rows) {
-    const zoneName = text(hotspot.location_zone);
-    const address = text(hotspot.location_normalized);
+    const zoneName = text(hotspot.zona_ubicacion);
+    const address = text(hotspot.ubicacion_normalizada);
     const count = number(hotspot.total, 0);
 
     const zoneObj = zones.find((z) => z.zone === zoneName);

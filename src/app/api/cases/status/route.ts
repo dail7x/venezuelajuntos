@@ -18,13 +18,13 @@ export async function POST(request: Request) {
     const noteId = nanoid(10);
 
     const tx1 = {
-      sql: "UPDATE persons SET status = ?, updated_at = ? WHERE id = ?",
-      args: [body.status, now, body.caseId],
+      sql: "UPDATE personas SET estado_actual = ?, actualizado_en = ? WHERE id = ?",
+      args: [body.estado_actual, now, body.caseId],
     };
 
     const tx2 = {
-      sql: `INSERT INTO person_notes (
-        id, person_id, created_at, source, author_name, author_contact, author_role, note_status, text
+      sql: `INSERT INTO notas_persona (
+        id, person_id, creado_en, source, nombre_reportante, contacto_reportante, author_role, note_status, text
       ) VALUES (?, ?, ?, 'web_form', ?, ?, 'user', ?, ?)`,
       args: [
         noteId,
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
         now,
         body.authorName?.trim() || "Anónimo",
         body.authorContact?.trim() || "",
-        body.status,
+        body.estado_actual,
         body.text.trim(),
       ],
     };

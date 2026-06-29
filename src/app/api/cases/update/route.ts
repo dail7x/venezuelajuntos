@@ -24,25 +24,25 @@ export async function POST(request: Request) {
 
     // Fetch existing case to check if status changed
     const existing = await db.execute({
-      sql: "SELECT status, full_name FROM persons WHERE id = ?",
+      sql: "SELECT estado_actual, nombre_completo FROM personas WHERE id = ?",
       args: [body.id],
     });
 
     const previousStatus = existing.rows[0]?.status;
-    const previousName = existing.rows[0]?.full_name;
+    const previousName = existing.rows[0]?.nombre_completo;
 
     // Update case in DB
     await db.execute({
-      sql: `UPDATE persons SET 
-        full_name = ?,
-        alternate_names = ?,
-        age_estimated = ?,
+      sql: `UPDATE personas SET 
+        nombre_completo = ?,
+        nombres_alternativos = ?,
+        edad_estimada = ?,
         sex = ?,
-        physical_desc = ?,
-        clothing_desc = ?,
-        last_seen_address = ?,
-        status = ?,
-        updated_at = ?
+        descripcion_fisica = ?,
+        descripcion_vestimenta = ?,
+        ultima_direccion_conocida = ?,
+        estado_actual = ?,
+        actualizado_en = ?
       WHERE id = ?`,
       args: [
         body.fullName.trim(),
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
         body.physicalDesc?.trim() || null,
         body.clothingDesc?.trim() || null,
         body.lastSeenAddress?.trim() || null,
-        body.status || "missing",
+        body.estado_actual || "missing",
         now,
         body.id,
       ],
@@ -60,33 +60,33 @@ export async function POST(request: Request) {
 
     let newPhotoUrl = null;
     if (body.photoDataUrl) {
-      newPhotoUrl = await uploadReportImage(body.photoDataUrl, "persons");
+      newPhotoUrl = await uploadReportImage(body.photoDataUrl, "personas");
       if (newPhotoUrl) {
         await db.execute({
-          sql: "UPDATE persons SET photo_url = ? WHERE id = ?",
+          sql: "UPDATE personas SET url_foto = ? WHERE id = ?",
           args: [newPhotoUrl.url, body.id],
         });
       }
     }
 
-    // Log the action in person_notes
+    // Log the action in notas_persona
     const noteId = nanoid(10);
     let noteText = "Ficha editada por el administrador.";
-    if (previousStatus && previousStatus !== body.status) {
-      noteText = `Estado actualizado de '${previousStatus}' a '${body.status}' por el administrador.`;
+    if (previousStatus && previousStatus !== body.estado_actual) {
+      noteText = `Estado actualizado de '${previousStatus}' a '${body.estado_actual}' por el administrador.`;
     } else if (previousName && previousName !== body.fullName) {
       noteText = `Nombre editado de '${previousName}' a '${body.fullName}' por el administrador.`;
     }
 
     await db.execute({
-      sql: `INSERT INTO person_notes (
-        id, person_id, created_at, source, author_name, author_role, note_status, text
+      sql: `INSERT INTO notas_persona (
+        id, person_id, creado_en, source, nombre_reportante, author_role, note_status, text
       ) VALUES (?, ?, ?, 'web_form', 'Administrador', 'admin', ?, ?)`,
       args: [
         noteId,
         body.id,
         now,
-        body.status || "missing",
+        body.estado_actual || "missing",
         noteText,
       ],
     });

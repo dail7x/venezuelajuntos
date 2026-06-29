@@ -25,12 +25,12 @@ export default function AdminPage() {
             <section key={key}>
               <h2>{label}</h2>
               {seedCases
-                .filter((item) => item.status === key)
+                .filter((item) => item.estado_actual === key)
                 .map((item) => (
                   <article key={item.id}>
                     <strong>{item.title}</strong>
                     <span>{item.zone}</span>
-                    <small>{statusLabels[item.status]}</small>
+                    <small>{statusLabels[item.estado_actual]}</small>
                   </article>
                 ))}
             </section>

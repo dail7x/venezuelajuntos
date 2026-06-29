@@ -9,11 +9,11 @@ export async function GET(request: Request) {
   const limit = parseInt(searchParams.get("limit") || "99", 10);
   const query = searchParams.get("query") || "";
   const zone = searchParams.get("zone") || "";
-  const status = searchParams.get("status") || "";
+  const estado_actual = searchParams.get("status") || "";
   const hasUpdates = searchParams.get("hasUpdates") === "true";
 
   try {
-    const data = await getPublicCasesFromDb(page, limit, query, zone, status, hasUpdates);
+    const data = await getPublicCasesFromDb(page, limit, query, zone, estado_actual, hasUpdates);
     return NextResponse.json({ 
       data: data.items, 
       total: data.total, 

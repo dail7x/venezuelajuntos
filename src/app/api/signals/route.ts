@@ -20,23 +20,23 @@ export async function POST(request: Request) {
     const caseId = body.caseId;
     const type = body.type;
 
-    // Check persons table
+    // Check personas table
     const personRes = await db.execute({
-      sql: "SELECT id, status, full_name FROM persons WHERE id = ?",
+      sql: "SELECT id, estado_actual, nombre_completo FROM personas WHERE id = ?",
       args: [caseId],
     });
 
     if (personRes.rows.length > 0) {
       if (type === "resolved") {
         await db.execute({
-          sql: "UPDATE persons SET status = 'located', updated_at = ? WHERE id = ?",
+          sql: "UPDATE personas SET estado_actual = 'located', actualizado_en = ? WHERE id = ?",
           args: [now, caseId],
         });
 
         // Insert a log note
         await db.execute({
-          sql: `INSERT INTO person_notes (
-            id, person_id, created_at, source, author_name, author_role, note_status, text
+          sql: `INSERT INTO notas_persona (
+            id, person_id, creado_en, source, nombre_reportante, author_role, note_status, text
           ) VALUES (?, ?, ?, 'signal', 'Señal ciudadana', 'system', 'located', ?)`,
           args: [
             nanoid(10),
@@ -47,14 +47,14 @@ export async function POST(request: Request) {
         });
       } else if (type === "confirmed") {
         await db.execute({
-          sql: "UPDATE persons SET updated_at = ? WHERE id = ?",
+          sql: "UPDATE personas SET actualizado_en = ? WHERE id = ?",
           args: [now, caseId],
         });
 
         // Insert a log note
         await db.execute({
-          sql: `INSERT INTO person_notes (
-            id, person_id, created_at, source, author_name, author_role, note_status, text
+          sql: `INSERT INTO notas_persona (
+            id, person_id, creado_en, source, nombre_reportante, author_role, note_status, text
           ) VALUES (?, ?, ?, 'signal', 'Señal ciudadana', 'system', 'missing', ?)`,
           args: [
             nanoid(10),
@@ -65,30 +65,30 @@ export async function POST(request: Request) {
         });
       }
     } else {
-      // Check pet_reports table
+      // Check reportes_mascotas table
       const petRes = await db.execute({
-        sql: "SELECT id, status FROM pet_reports WHERE id = ?",
+        sql: "SELECT id, estado_actual FROM reportes_mascotas WHERE id = ?",
         args: [caseId],
       });
 
       if (petRes.rows.length > 0) {
         if (type === "resolved") {
           await db.execute({
-            sql: "UPDATE pet_reports SET status = 'located', updated_at = ? WHERE id = ?",
+            sql: "UPDATE reportes_mascotas SET estado_actual = 'located', actualizado_en = ? WHERE id = ?",
             args: [now, caseId],
           });
         }
       } else {
-        // Check help_requests table
+        // Check solicitudes_ayuda table
         const helpRes = await db.execute({
-          sql: "SELECT id, status FROM help_requests WHERE id = ?",
+          sql: "SELECT id, estado_actual FROM solicitudes_ayuda WHERE id = ?",
           args: [caseId],
         });
 
         if (helpRes.rows.length > 0) {
           if (type === "resolved") {
             await db.execute({
-              sql: "UPDATE help_requests SET status = 'fulfilled', updated_at = ? WHERE id = ?",
+              sql: "UPDATE solicitudes_ayuda SET estado_actual = 'fulfilled', actualizado_en = ? WHERE id = ?",
               args: [now, caseId],
             });
           }

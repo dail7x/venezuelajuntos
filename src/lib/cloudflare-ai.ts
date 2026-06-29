@@ -4,24 +4,24 @@ export async function normalizeAddressWithAI(rawAddress: string) {
 
   if (!accountId || !apiToken) {
     console.warn("Cloudflare AI credentials missing, returning raw address.");
-    return { location_zone: null, location_normalized: null };
+    return { zona_ubicacion: null, ubicacion_normalizada: null };
   }
 
   if (!rawAddress || rawAddress.trim().length === 0) {
-    return { location_zone: null, location_normalized: null };
+    return { zona_ubicacion: null, ubicacion_normalizada: null };
   }
 
   const prompt = `Eres un asistente experto en parsear direcciones en Venezuela, especialmente en zonas afectadas por desastres naturales (como La Guaira, Vargas, Caracas, etc).
 Te daré una dirección extraída de un reporte ciudadano, que puede tener errores ortográficos o ser informal.
 Debes devolver un JSON con dos campos:
-1. "location_zone": Una categoría macro de la zona (ej. "La Guaira", "Caracas", "Macuto", "Maiquetia", "Naiguatá"). Si no estás seguro, devuelve la zona más probable o "Vargas".
-2. "location_normalized": La dirección atomizada y formalizada (ej. si dice "la dguaira urb palmar edf caribe", devuelves "Urb. Palmar, Edf. Caribe, La Guaira").
+1. "zona_ubicacion": Una categoría macro de la zona (ej. "La Guaira", "Caracas", "Macuto", "Maiquetia", "Naiguatá"). Si no estás seguro, devuelve la zona más probable o "Vargas".
+2. "ubicacion_normalizada": La dirección atomizada y formalizada (ej. si dice "la dguaira urb palmar edf caribe", devuelves "Urb. Palmar, Edf. Caribe, La Guaira").
 
 Dirección cruda: "${rawAddress}"
 
 Devuelve ÚNICAMENTE el JSON, sin texto adicional ni bloques de markdown. 
-Ejemplo de formato: {"location_zone": "La Guaira", "location_normalized": "Edificio Los Cocos, Av Principal, La Guaira"}
-IMPORTANTE: Usa los nombres y lugares de la 'Dirección cruda'. NO uses el texto del ejemplo anterior si no está en la 'Dirección cruda'. Si la dirección no menciona edificios, no los inventes. Si no estás seguro o es muy ambigua, simplemente repite la 'Dirección cruda' en 'location_normalized'.`;
+Ejemplo de formato: {"zona_ubicacion": "La Guaira", "ubicacion_normalizada": "Edificio Los Cocos, Av Principal, La Guaira"}
+IMPORTANTE: Usa los nombres y lugares de la 'Dirección cruda'. NO uses el texto del ejemplo anterior si no está en la 'Dirección cruda'. Si la dirección no menciona edificios, no los inventes. Si no estás seguro o es muy ambigua, simplemente repite la 'Dirección cruda' en 'ubicacion_normalizada'.`;
 
   try {
     const res = await fetch(
@@ -40,7 +40,7 @@ IMPORTANTE: Usa los nombres y lugares de la 'Dirección cruda'. NO uses el texto
 
     if (!res.ok) {
       console.error("Cloudflare AI error:", res.status, res.statusText, await res.text());
-      return { location_zone: null, location_normalized: null };
+      return { zona_ubicacion: null, ubicacion_normalizada: null };
     }
 
     const data = await res.json();
@@ -55,16 +55,20 @@ IMPORTANTE: Usa los nombres y lugares de la 'Dirección cruda'. NO uses el texto
     }
     
     return {
-      location_zone: parsed.location_zone || null,
-      location_normalized: parsed.location_normalized || null
+      zona_ubicacion: parsed.zona_ubicacion || null,
+      ubicacion_normalizada: parsed.ubicacion_normalizada || null
     };
   } catch (error) {
     console.error("Failed to parse address with AI:", error);
-    return { location_zone: null, location_normalized: null };
+    return { zona_ubicacion: null, ubicacion_normalizada: null };
   }
 }
 
-export async function extractNamesFromHospitalList(sourceType: "image" | "tweet", sourceData: string) {
+export async function extractNamesFromHospitalList(
+  sourceType: "image" | "tweet" | "excel" | "pdf",
+  sourceData: string,
+  context?: { manualHospitalName?: string, listDate?: string }
+) {
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
   const apiToken = process.env.CLOUDFLARE_API_TOKEN;
 
@@ -72,36 +76,33 @@ export async function extractNamesFromHospitalList(sourceType: "image" | "tweet"
     throw new Error("Cloudflare AI credentials missing");
   }
 
-  const prompt = `Eres un asistente que extrae información de listas de pacientes en hospitales.
+  const prompt = `Eres un asistente que extrae información de listas de pacientes en hospitales, centros de primeros auxilios y refugios.
 De la información provista, extrae todos los nombres de personas y devuelve un JSON.
+${context?.manualHospitalName ? `OJO: El usuario indica que este listado pertenece a: "${context.manualHospitalName}".` : ""}
+${context?.listDate ? `OJO: El usuario indica que la fecha de este listado es: "${context.listDate}".` : ""}
 El formato debe ser EXACTAMENTE este:
 {
-  "hospital_name": "Nombre del hospital si se menciona, o null",
+  "hospital_name": "Nombre del hospital o refugio si se menciona, o null",
   "people": [
     {
       "full_name": "Nombre completo",
       "cedula_identidad": numero_o_null,
       "age_estimated": numero_o_null,
-      "status": "located" o "deceased"
+      "status": "localizado" o "fallecido"
     }
   ]
 }
-Devuelve ÚNICAMENTE el JSON, sin markdown, sin explicaciones.`;
+¡MUY IMPORTANTE!: Debes responder ÚNICA Y EXCLUSIVAMENTE con un objeto JSON válido. No incluyas absolutamente nada de texto antes ni después. El primer carácter de tu respuesta debe ser { y el último debe ser }. Si no encuentras nombres legibles, devuelve {"hospital_name": null, "people": []}.`;
 
   let messages: any[] = [];
 
   if (sourceType === "image") {
-    // sourceData is a base64 encoded image
-    // Note: Cloudflare's multimodal API format usually expects base64 inside the message or via bytes array.
-    // Llama 3.2 Vision uses a specific format.
     messages = [
       { role: "user", content: prompt },
       { role: "user", content: "Extrae de la siguiente imagen:" },
-      // The image format depends on the exact CF API, but generally it's passed as an object with `image`
       { role: "user", content: [{ type: "image_url", image_url: { url: `data:image/jpeg;base64,${sourceData}` } }] }
     ];
-  } else {
-    // sourceData is text/tweet
+  } else if (sourceType === "tweet" || sourceType === "excel" || sourceType === "pdf") {
     messages = [
       { role: "user", content: prompt + "\n\nTexto:\n" + sourceData }
     ];
@@ -135,12 +136,27 @@ Devuelve ÚNICAMENTE el JSON, sin markdown, sin explicaciones.`;
     let cleanJson = "";
     
     if (typeof responseRaw === 'string') {
-      cleanJson = responseRaw.replace(/```json/gi, '').replace(/```/g, '').trim();
+      // Find the first { and the last }
+      const firstBrace = responseRaw.indexOf('{');
+      const lastBrace = responseRaw.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        cleanJson = responseRaw.substring(firstBrace, lastBrace + 1);
+      } else {
+        // Fallback to previous logic if no braces found (unlikely for JSON)
+        cleanJson = responseRaw.replace(/```json/gi, '').replace(/```/g, '').trim();
+      }
     } else if (typeof responseRaw === 'object' && responseRaw !== null) {
       cleanJson = JSON.stringify(responseRaw);
     }
     
-    return JSON.parse(cleanJson);
+    try {
+      return JSON.parse(cleanJson);
+    } catch (parseError) {
+      console.warn("AI returned invalid JSON, falling back to empty list. Response was:", responseRaw);
+      // If the model completely ignored the JSON instruction (e.g. said "I can't read this"),
+      // we gracefully return an empty list so the frontend doesn't crash.
+      return { hospital_name: null, people: [] };
+    }
   } catch (error) {
     console.error("Failed to extract names with AI:", error);
     throw error;

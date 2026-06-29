@@ -41,7 +41,7 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
   const [selectedPerson, setSelectedPerson] = useState<PublicCase | null>(null);
   const [showEmergencyHelp, setShowEmergencyHelp] = useState(false);
   const [activeModal] = useState<string | null>(defaultModal);
-  const [globalStats, setGlobalStats] = useState({ open: 0, missing: 0, resolved: 0, duplicates: 0 });
+  const [globalStats, setGlobalStats] = useState({ open: 0, missing: 0, resolved: 0, duplicates: 0, unique_people: 0 });
   const [statusFilter, setStatusFilter] = useState("");
   const [hasUpdatesFilter, setHasUpdatesFilter] = useState(false);
   const [viewTab, setViewTab] = useState<"personas" | "ayuda" | "mascotas">("personas");
@@ -281,6 +281,19 @@ export default function Home({ defaultModal = null }: { defaultModal?: string | 
           >
             <strong>{globalStats.open.toLocaleString("es-ES")}</strong><span>Reportes recibidos</span>
           </button>
+          <div 
+            className="stat-box"
+            style={{ 
+              background: "#fdf4ff",
+              color: "#a21caf",
+              border: "1px solid #fae8ff"
+            }}
+          >
+            <strong>{globalStats.unique_people.toLocaleString("es-ES")}</strong>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.25rem", color: "#a21caf" }}>
+              <UserRoundCheck size={16} /> Personas únicas (aprox)
+            </span>
+          </div>
           <button 
             type="button"
             className="stat-box"

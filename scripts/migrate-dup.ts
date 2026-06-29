@@ -31,12 +31,12 @@ async function runMigration() {
   });
 
   try {
-    console.log("Adding potential_duplicate_of column to persons...");
-    await client.execute("ALTER TABLE persons ADD COLUMN potential_duplicate_of TEXT;");
+    console.log("Adding posible_duplicado_de column to personas...");
+    await client.execute("ALTER TABLE personas ADD COLUMN posible_duplicado_de TEXT;");
     console.log("Success!");
   } catch (error: any) {
     if (error.message && error.message.includes("duplicate column name")) {
-       console.log("Column potential_duplicate_of already exists.");
+       console.log("Column posible_duplicado_de already exists.");
     } else {
        console.error("Error adding column:", error);
     }

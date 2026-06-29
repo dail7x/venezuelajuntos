@@ -7,7 +7,7 @@ export async function GET() {
     stats: getStats(),
     topAffectedZones: seedCases.map((item) => ({
       name: item.zone,
-      status: item.status,
+      status: item.estado_actual,
       lat: item.lat,
       lng: item.lng,
     })),

@@ -9,7 +9,7 @@ async function main() {
   
   while (hasMore) {
     console.log(`Fetching page ${page}...`);
-    const res = await fetch(`https://api.venezuelajuntos.com/v1/persons?page=${page}&limit=50`);
+    const res = await fetch(`https://api.venezuelajuntos.com/v1/personas?page=${page}&limit=50`);
     if (!res.ok) throw new Error("API error");
     const json = await res.json();
     const items = json.data || [];
@@ -20,34 +20,32 @@ async function main() {
       const source = "api_v1";
       const id = `${source}_${p.id}`;
       const source_url = `https://api.venezuelajuntos.com/person/${p.id}`;
-      const created_at = p.createdAt ? new Date(p.createdAt).getTime() : Date.now();
-      const updated_at = p.updatedAt ? new Date(p.updatedAt).getTime() : created_at;
-      const full_name = p.nombre || "Desconocido";
-      const age_estimated = p.edad || null;
-      let status = p.estado === "localizado" ? "located" : "missing";
-      if (p.estado === "reunificado") status = "reunified";
-      const last_seen_address = p.ubicacion || "Desconocida";
-      const physical_desc = p.descripcion || null;
-      const photo_url = p.foto || null;
-      const author_contact = p.contacto || null;
+      const creado_en = p.createdAt ? new Date(p.createdAt).getTime() : Date.now();
+      const actualizado_en = p.updatedAt ? new Date(p.updatedAt).getTime() : creado_en;
+      const nombre_completo = p.nombre || "Desconocido";
+      const edad_estimada = p.edad || null;
+      let estado_actual = p.estado === "localizado" ? "located" : "missing";
+      if (p.estado === "reunificado") estado_actual = "reunified";
+      const ultima_direccion_conocida = p.ubicacion || "Desconocida";
+      const descripcion_fisica = p.descripcion || null;
+      const url_foto = p.foto || null;
+      const contacto_reportante = p.contacto || null;
 
       await db.execute({
-        sql: `INSERT INTO persons (
-          id, source, source_url, created_at, updated_at, full_name, age_estimated,
-          status, last_seen_address, physical_desc, photo_url, author_contact
+        sql: `INSERT INTO personas (
+          id, source, source_url, creado_en, actualizado_en, nombre_completo, edad_estimada, estado_actual, ultima_direccion_conocida, descripcion_fisica, url_foto, contacto_reportante
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT (id) DO UPDATE SET
-          updated_at = EXCLUDED.updated_at,
-          full_name = EXCLUDED.full_name,
-          age_estimated = EXCLUDED.age_estimated,
-          status = EXCLUDED.status,
-          last_seen_address = EXCLUDED.last_seen_address,
-          physical_desc = EXCLUDED.physical_desc,
-          photo_url = EXCLUDED.photo_url,
-          author_contact = EXCLUDED.author_contact`,
+          actualizado_en = EXCLUDED.actualizado_en,
+          nombre_completo = EXCLUDED.nombre_completo,
+          edad_estimada = EXCLUDED.edad_estimada,
+          estado_actual = EXCLUDED.status,
+          ultima_direccion_conocida = EXCLUDED.ultima_direccion_conocida,
+          descripcion_fisica = EXCLUDED.descripcion_fisica,
+          url_foto = EXCLUDED.url_foto,
+          contacto_reportante = EXCLUDED.contacto_reportante`,
         args: [
-          id, source, source_url, created_at, updated_at, full_name, age_estimated,
-          status, last_seen_address, physical_desc, photo_url, author_contact
+          id, source, source_url, creado_en, actualizado_en, nombre_completo, edad_estimada, estado_actual, ultima_direccion_conocida, descripcion_fisica, url_foto, contacto_reportante
         ]
       });
       totalImported++;

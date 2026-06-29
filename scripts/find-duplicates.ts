@@ -41,22 +41,22 @@ async function runSearch() {
 
   const client = createClient({ url, authToken });
 
-  console.log("Fetching persons...");
-  const res = await client.execute("SELECT id, full_name, location_zone FROM persons WHERE is_deleted = 0 AND duplicate_of IS NULL AND potential_duplicate_of IS NULL");
+  console.log("Fetching personas...");
+  const res = await client.execute("SELECT id, nombre_completo, zona_ubicacion FROM personas WHERE esta_eliminado = 0 AND duplicado_de IS NULL AND posible_duplicado_de IS NULL");
   
-  const persons = res.rows.map(r => ({
+  const personas = res.rows.map(r => ({
     id: String(r.id),
-    name: String(r.full_name),
-    zone: String(r.location_zone || "").toLowerCase()
+    name: String(r.nombre_completo),
+    zone: String(r.zona_ubicacion || "").toLowerCase()
   }));
 
-  console.log(`Analyzing ${persons.length} records for duplicates...`);
+  console.log(`Analyzing ${personas.length} records for duplicates...`);
   let duplicateCount = 0;
 
-  for (let i = 0; i < persons.length; i++) {
-    for (let j = i + 1; j < persons.length; j++) {
-      const p1 = persons[i];
-      const p2 = persons[j];
+  for (let i = 0; i < personas.length; i++) {
+    for (let j = i + 1; j < personas.length; j++) {
+      const p1 = personas[i];
+      const p2 = personas[j];
 
       // Match logic: They must have a name match. 
       // If zone is specified, they should preferably be in the same zone or one unknown.
@@ -67,14 +67,14 @@ async function runSearch() {
       if (nameMatches && zoneMatches) {
            // We mark the newer one (j) as potential duplicate of the older one (i)
            await client.execute({
-             sql: "UPDATE persons SET potential_duplicate_of = ? WHERE id = ?",
+             sql: "UPDATE personas SET posible_duplicado_de = ? WHERE id = ?",
              args: [p1.id, p2.id]
            });
            console.log(`Match: ${p1.name} <-> ${p2.name}`);
            duplicateCount++;
            
            // We remove p2 from our array so we don't match it again against others
-           persons.splice(j, 1);
+           personas.splice(j, 1);
            j--;
       }
     }

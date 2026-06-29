@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   }
 
   const title = `${item.title} | ${kindLabels[item.kind] || 'Reporte'} en Venezuela Juntos`;
-  const description = `Comparte sólo información confirmada. Zona aproximada: ${item.publicAddress || item.zone}. Estado: ${statusLabels[item.status] || 'Desconocido'}.`;
+  const description = `Comparte sólo información confirmada. Zona aproximada: ${item.publicAddress || item.zone}. Estado: ${statusLabels[item.estado_actual] || 'Desconocido'}.`;
 
   return {
     title,
@@ -64,7 +64,7 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
           </div>
           <div className="status-panel">
             <span>Estado</span>
-            <strong>{statusLabels[item.status]}</strong>
+            <strong>{statusLabels[item.estado_actual]}</strong>
           </div>
         </section>
 

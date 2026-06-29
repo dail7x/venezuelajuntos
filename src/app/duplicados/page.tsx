@@ -20,17 +20,17 @@ async function mergeDuplicates(formData: FormData) {
   if (action === "merge") {
     // 1. Get both to merge photos
     const dupRes = await db.execute({
-      sql: "SELECT photo_url, physical_desc FROM persons WHERE id = ?",
+      sql: "SELECT url_foto, descripcion_fisica FROM personas WHERE id = ?",
       args: [duplicateId]
     });
     
     if (dupRes.rows.length > 0) {
-      const dupPhoto = dupRes.rows[0].photo_url;
+      const dupPhoto = dupRes.rows[0].url_foto;
       
       // Update the original (append photo if it exists and isn't already there)
       if (dupPhoto) {
         await db.execute({
-          sql: "UPDATE persons SET photo_url = photo_url || ',' || ? WHERE id = ? AND (photo_url NOT LIKE '%' || ? || '%')",
+          sql: "UPDATE personas SET url_foto = url_foto || ',' || ? WHERE id = ? AND (url_foto NOT LIKE '%' || ? || '%')",
           args: [dupPhoto, originalId, dupPhoto]
         });
       }
@@ -38,13 +38,13 @@ async function mergeDuplicates(formData: FormData) {
 
     // Mark as deleted and link
     await db.execute({
-      sql: "UPDATE persons SET is_deleted = 1, duplicate_of = ?, potential_duplicate_of = NULL WHERE id = ?",
+      sql: "UPDATE personas SET esta_eliminado = 1, duplicado_de = ?, posible_duplicado_de = NULL WHERE id = ?",
       args: [originalId, duplicateId]
     });
   } else if (action === "reject") {
     // Just clear the flag
     await db.execute({
-      sql: "UPDATE persons SET potential_duplicate_of = NULL WHERE id = ?",
+      sql: "UPDATE personas SET posible_duplicado_de = NULL WHERE id = ?",
       args: [duplicateId]
     });
   }
@@ -59,12 +59,12 @@ export default async function DuplicadosDashboard() {
   const res = await db.execute({
     sql: `
       SELECT 
-        d.id as d_id, d.full_name as d_name, d.location_zone as d_zone, d.photo_url as d_photo, d.created_at as d_created, d.cedula_identidad as d_cedula,
-        o.id as o_id, o.full_name as o_name, o.location_zone as o_zone, o.photo_url as o_photo, o.created_at as o_created, o.cedula_identidad as o_cedula
-      FROM persons d
-      JOIN persons o ON d.potential_duplicate_of = o.id
-      WHERE d.is_deleted = 0 AND d.potential_duplicate_of IS NOT NULL
-      ORDER BY d.created_at DESC
+        d.id as d_id, d.nombre_completo as d_name, d.zona_ubicacion as d_zone, d.url_foto as d_photo, d.creado_en as d_created, d.cedula_identidad as d_cedula,
+        o.id as o_id, o.nombre_completo as o_name, o.zona_ubicacion as o_zone, o.url_foto as o_photo, o.creado_en as o_created, o.cedula_identidad as o_cedula
+      FROM personas d
+      JOIN personas o ON d.posible_duplicado_de = o.id
+      WHERE d.esta_eliminado = 0 AND d.posible_duplicado_de IS NOT NULL
+      ORDER BY d.creado_en DESC
     `,
     args: []
   });

@@ -41,7 +41,7 @@ async function migrate() {
   }
   
   // List of tables to migrate
-  const tables = ["persons", "person_notes"];
+  const tables = ["personas", "notas_persona"];
   
   for (const table of tables) {
     console.log(`Migrating table ${table}...`);
