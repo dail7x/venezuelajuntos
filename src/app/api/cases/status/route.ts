@@ -19,7 +19,7 @@ export async function POST(request: Request) {
 
     const tx1 = {
       sql: "UPDATE personas SET estado_actual = ?, actualizado_en = ? WHERE id = ?",
-      args: [body.estado_actual, now, body.caseId],
+      args: [body.status, now, body.caseId],
     };
 
     const tx2 = {
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
         now,
         body.authorName?.trim() || "Anónimo",
         body.authorContact?.trim() || "",
-        body.estado_actual,
+        body.status,
         body.text.trim(),
       ],
     };

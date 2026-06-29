@@ -52,7 +52,7 @@ export async function POST(request: Request) {
         body.physicalDesc?.trim() || null,
         body.clothingDesc?.trim() || null,
         body.lastSeenAddress?.trim() || null,
-        body.estado_actual || "missing",
+        body.status || "missing",
         now,
         body.id,
       ],
@@ -72,8 +72,8 @@ export async function POST(request: Request) {
     // Log the action in notas_persona
     const noteId = nanoid(10);
     let noteText = "Ficha editada por el administrador.";
-    if (previousStatus && previousStatus !== body.estado_actual) {
-      noteText = `Estado actualizado de '${previousStatus}' a '${body.estado_actual}' por el administrador.`;
+    if (previousStatus && previousStatus !== body.status) {
+      noteText = `Estado actualizado de '${previousStatus}' a '${body.status}' por el administrador.`;
     } else if (previousName && previousName !== body.fullName) {
       noteText = `Nombre editado de '${previousName}' a '${body.fullName}' por el administrador.`;
     }
