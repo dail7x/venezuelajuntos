@@ -91,7 +91,10 @@ async function syncWithPlaywright() {
       const localizado_nota = p.localizadoNota || null;
 
       const descripcion_fisica = p.descripcion || null;
-      const url_foto = p.foto || null;
+      let url_foto = p.foto || null;
+      if (url_foto && url_foto.includes("reconexion-api-images-147455119818.s3.us-east-1.amazonaws.com")) {
+        url_foto = url_foto.replace("reconexion-api-images-147455119818.s3.us-east-1.amazonaws.com", "cdn-imagenes.theempire.tech");
+      }
       const contacto_reportante = p.contacto || null;
 
       return {
